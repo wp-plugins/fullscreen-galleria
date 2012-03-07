@@ -34,13 +34,32 @@ None
 
 == Frequently Asked Questions ==
 
-None at the moment.
+= fsg_photobox keyword =
+
+Adds random photobox to the page. eg. [fsg_photobox include="244, 243,242,241,208,207,206,205,204" rows="6" cols="4"] See live example [here](http://torturedmind.org/photos/).
+
+* **include** - specify list of images (default is all images attached to post/page)
+* **rows** - maximum number of rows in the grid (default is 2)
+* **cols** - maximum number of columns in the grid (default is 2)
+* **border** - border around the pictures in pixels (default is 2)
+
+= fsg_link keyword =
+
+Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115"]View[/fsg_link] See live example [here](http://torturedmind.org/misc-media/) (View Online -button).
+
+* **include** - specify list of images (default is all images attached to post/page)
+* **class** - class for a tag (default is none)
 
 == Screenshots ==
 
 1. Fullscreen Galleria in action.
 
 == Changelog ==
+
+= 0.2 =
+* Arrows and close buttons fade out (not move) so they work also when hidden
+* fsg_link keyword added
+* fsg_photobox keyword added
 
 = 0.1 =
 * Initial release

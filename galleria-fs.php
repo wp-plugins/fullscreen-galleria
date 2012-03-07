@@ -4,7 +4,7 @@
 Plugin Name: Galleria Fullscreen
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.1
+Version: 0.2
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
@@ -12,7 +12,11 @@ License: MIT
 ******************************************************************************/
 
 class GFSPlugin {
-  protected $json = "galleria_json = {\n";
+  protected $photobox = "fsg_photobox = {\n";
+  protected $json = "fsg_json = {\n";
+  protected $photoboxid = 0;
+  protected $groupid = 0;
+  protected $used = Array();
 
   function startswith(&$str, &$starts)
   {
@@ -66,6 +70,78 @@ class GFSPlugin {
     add_action('wp_footer', array(&$this, 'footer'));
     add_filter('attachment_fields_to_edit', array(&$this, 'fields_to_edit'), 10, 2);
     add_filter('attachment_fields_to_save', array(&$this, 'fields_to_save'), 10, 2);
+    add_shortcode('fsg_photobox', array(&$this, 'photobox_shortcode'));
+    add_shortcode('fsg_link', array(&$this, 'link_shortcode'));
+  }
+
+  function photobox_shortcode($attr, $content = null)
+  {
+    global $post;
+
+    extract(shortcode_atts(array(
+      'rows'       => 2,
+      'cols'       => 3,
+      'border'     => 2,
+      'include'    => '',
+    ), $attr));
+
+    if (!empty($include)) {
+      $photos = &get_posts(array('post_type' => 'attachment',
+          'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
+          'include' => $include));
+    } else {
+      $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+          'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
+          'orderby' => 'menu_order ID'));
+    }
+    $images = array();
+    foreach ($photos as $key => $val) {
+      $images[$this->href(wp_get_attachment_link($val->ID, 'full'))] =
+          array('post_id' => $val->ID, 'id' => 0, 'data' => $val);
+    }
+    $id = 'fsg_photobox_'.$this->photoboxid;
+    $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".$border."},\n";
+    $this->append_json($id, $images, true);
+    ++$this->photoboxid;
+    return "<div id='".$id."' class='galleria-photobox'></div>";
+  }
+
+  function link_shortcode($attr, $content = null)
+  {
+    global $post;
+
+    extract(shortcode_atts(array(
+      'include'    => '',
+      'class'      => '',
+    ), $attr));
+
+    if (!empty($include)) {
+      $photos = &get_posts(array('post_type' => 'attachment',
+          'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
+          'include' => $include));
+      $id = "fsg_group_".$this->groupid;
+      ++$this->groupid;
+    } else {
+      $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+          'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
+          'orderby' => 'menu_order ID'));
+      $id = "fsg_post_".$post->ID;
+    }
+    $images = array();
+    foreach ($photos as $key => $val) {
+      $images[$this->href(wp_get_attachment_link($val->ID, 'full'))] =
+          array('post_id' => $val->ID, 'id' => 0, 'data' => $val);
+    }
+    if (!empty($include)) {
+      $this->append_json($id, $images);
+      $this->used = array_merge($this->used, wp_parse_id_list($include));
+    }
+    reset($images);
+    $first = key($images);
+    if (!empty($class)) {
+      $class = " class='".$class."'";
+    }
+    return "<a data-postid='".$id."' data-imgid='0' href='".$first."'".$class.">".$content."</a>";
   }
 
   function fields_to_edit($form_fields, $post)
@@ -106,7 +182,7 @@ class GFSPlugin {
 
   function enqueue_scripts()
   {
-    $ver = '0.1';
+    $ver = '0.2';
     wp_enqueue_script('galleria', plugins_url('galleria-1.2.6.min.js', __FILE__), array('jquery'), '1.2.6');
     //wp_enqueue_script('galleria', plugins_url('galleria-1.2.6.js', __FILE__), array('jquery'), '1.2.6');
     wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('jquery'), $ver);
@@ -117,9 +193,11 @@ class GFSPlugin {
   function footer()
   {
     if (!empty($this->json)) {
-      $this->json .= '};';
+      $this->json .= "};";
+      $this->photobox .= "};\n";
       $theme = plugins_url('galleria-fs-theme.js', __FILE__);
-      echo "<div id=\"galleria\"></div><script>Galleria.loadTheme(\"".$theme."\");\n".$this->json."</script>";
+      echo "<div id=\"galleria\"></div><script>Galleria.loadTheme(\"".$theme."\");\n".
+           $this->photobox.$this->json."</script>";
     }
   }
 
@@ -130,6 +208,63 @@ class GFSPlugin {
       return $meta['image_meta']['info'];
     }
     return '';
+  }
+
+  function append_json($id, &$images, $extra = false)
+  {
+    // Write json data for galleria
+    $i = 0;
+    $this->json .= $id.": [\n";
+    foreach ($images as $key => $val) {
+      if (!in_array($val['post_id'], $this->used)) {
+        $meta = wp_get_attachment_metadata($val['post_id']);
+        $thumb = wp_get_attachment_image_src($val['post_id'], 'thumbnail');
+        $thumb = $thumb[0];
+        $title = str_replace("'", "\\'", $val['data']->post_title);
+        //var_dump($val['data']);
+        $description = $val['data']->post_content;
+        if (!empty($description)) {
+          $description = str_replace("'", "\\'", $description);
+          $description = str_replace("\n", "<br/>", $description);
+          $description = str_replace("\r", "", $description);
+          $description = "<p class=\"galleria-info-description\">".$description."</p>";
+        }
+        if (!empty($meta['image_meta']['link'])) {
+          $link = $meta['image_meta']['link'];
+          if (strpos($link, 'flickr.com') != FALSE) {
+            $t = 'Show in Flickr';
+            $c = 'galleria-link-flickr';
+          } else {
+            $t = $link;
+            $c = 'galleria-link';
+          }
+          $link = "<div class=\"galleria-layeritem\">".
+                      "<a target=\"_blank\" title=\"".$t."\" href=\"".$link."\">".
+                      "<div class=\"".$c."\"></div></a>".
+                  "</div>";
+        } else {
+          $link = '';
+        }
+        $info = (empty($meta['image_meta']['info'])) ? '' :
+                "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
+        $this->json .= "{image: '".$key.
+                      "', thumb: '".$thumb.
+                      "', layer: '<div class=\"galleria-infolayer\">".
+                          "<div class=\"galleria-layeritem\">".
+                              "<h1>".$title."</h1>".$description.$info.
+                          "</div class=\"galleria-layeritem\">".$link."</div>'";
+        if ($extra) {
+          foreach (array("thumbnail", "medium", "large", "full") as $size) {
+            $img = wp_get_attachment_image_src($val['post_id'], $size);
+            $this->json .= ", ".$size.": ['".$img[0]."', ".$img[1].", ".$img[2]."]";
+          }
+        }
+        $this->json .= "},\n";
+        $images[$key]['id'] = $i;
+        ++$i;
+      }
+    }
+    $this->json .= "],\n";
   }
 
   // Handle gallery
@@ -146,82 +281,22 @@ class GFSPlugin {
     $images = array();
     foreach ($children as $key => $val) {
       $images[$this->href(wp_get_attachment_link($key, 'full'))] =
-          array('used' => false, 'post_id' => $key, 'id' => 0,
-                'group' => '', 'data' => $val);
+          array('post_id' => $key, 'id' => 0, 'data' => $val);
     }
 
     // Get possible image groups
     $links = $this->links($content);
-    $groups = array();
-    foreach ($links as $link) {
-      $group = $this->tagarg($link, 'data-filter');
-      if ($group != '') {
-        array_push($groups, $group);
-      }
-    }
-    array_push($groups, '');
-
-    // Write json data for galleria
-    foreach ($groups as $group) {
-      $i = 0;
-      $this->json .= "g".$post->ID.$group.": [\n";
-      foreach ($images as $key => $val) {
-        $meta = wp_get_attachment_metadata($val['post_id']);
-        //var_dump($val['used'], $group, $meta['file']);
-        if ($val['used'] == false && ($group != '' &&
-            $this->startswith($meta['file'], $group) || $group == '')) {
-          $thumb = wp_get_attachment_image_src($val['post_id'], 'thumbnail');
-          $thumb = $thumb[0];
-          $title = str_replace("'", "\\'", $val['data']->post_title);
-          //var_dump($val['data']);
-          $description = $val['data']->post_content;
-          if (!empty($description)) {
-            $description = str_replace("'", "\\'", $description);
-            $description = str_replace("\n", "<br/>", $description);
-            $description = str_replace("\r", "", $description);
-            $description = "<p class=\"galleria-info-description\">".$description."</p>";
-          }
-          if (!empty($meta['image_meta']['link'])) {
-            $link = $meta['image_meta']['link'];
-            if (strpos($link, 'flickr.com') != FALSE) {
-              $t = 'Show in Flickr';
-              $c = 'galleria-link-flickr';
-            } else {
-              $t = $link;
-              $c = 'galleria-link';
-            }
-            $link = "<div class=\"galleria-layeritem\">".
-                        "<a target=\"_blank\" title=\"".$t."\" href=\"".$link."\">".
-                        "<div class=\"".$c."\"></div></a>".
-                    "</div>";
-          } else {
-            $link = '';
-          }
-          $info = (empty($meta['image_meta']['info'])) ? '' :
-                  "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
-          $this->json .= "{image: '".$key.
-                        "', thumb: '".$thumb.
-                        "', layer: '<div class=\"galleria-infolayer\">".
-                            "<div class=\"galleria-layeritem\">".
-                                "<h1>".$title."</h1>".$description.$info.
-                            "</div class=\"galleria-layeritem\">".$link."</div>".
-                        "'},\n";
-          $images[$key]['used'] = true;
-          $images[$key]['id'] = $i;
-          $images[$key]['group'] = $group;
-        }
-        ++$i;
-      }
-      $this->json .= "],\n";
-    }
+    $this->append_json('fsg_post_'.$post->ID, $images);
 
     // Add needed data to links
     foreach ($links as $link) {
-      $href = $this->href($link);
-      if (array_key_exists($href, $images)) {
-        $tmp = str_replace('<a ', '<a data-postid="g'.$post->ID.$images[$href]['group'].
-                           '" data-imgid="'.$images[$href]['id'].'" ', $link);
-        $content = str_replace($link, $tmp, $content);
+      if (strpos($link, 'data-postid') === false) { // test if link already has the data
+        $href = $this->href($link);
+        if (array_key_exists($href, $images)) {
+          $tmp = str_replace('<a ', '<a data-postid="fsg_post_'.$post->ID.
+                            '" data-imgid="'.$images[$href]['id'].'" ', $link);
+          $content = str_replace($link, $tmp, $content);
+        }
       }
     }
     return $content;

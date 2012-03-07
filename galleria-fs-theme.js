@@ -48,8 +48,8 @@ Galleria.addTheme({
 
         // some stuff for non-touch browsers
         if (! touch ) {
-            this.addIdleState( this.get('image-nav-left'), { left:-50 });
-            this.addIdleState( this.get('image-nav-right'), { right:-50 });
+            this.addIdleState( this.get('image-nav-left'), { opacity:0 });
+            this.addIdleState( this.get('image-nav-right'), { opacity:0 });
             this.addIdleState( this.get('counter'), { opacity:0 });
             this.addIdleState( this.get('info-link'), { opacity:0 });
             this.addIdleState( this.get('info-text'), { opacity:0 });
@@ -57,7 +57,7 @@ Galleria.addTheme({
         } else {
             this.$('image-nav-left, image-nav-right').hide();
         }
-        this.addIdleState( this.get('close'), { right:-50 });
+        this.addIdleState( this.get('close'), { opacity:0 });
         var gallery = this;
         $.each(this._layers, function() {
           gallery.addIdleState(this, {opacity:0});
