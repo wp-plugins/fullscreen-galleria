@@ -43,6 +43,8 @@ show_galleria = function(event) {
         fullscreenDoubleTap: false,
         imageCrop: false,
         fullscreenCrop: false,
+        //imageCrop: 'fit',
+        //fullscreenCrop: 'fit',
         idleTime: 2000,
         extend: function() {
           this.enterFullscreen();

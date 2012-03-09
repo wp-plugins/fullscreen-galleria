@@ -53,8 +53,12 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 == Screenshots ==
 
 1. Fullscreen Galleria in action.
+2. Random photobox using fsg_photobox keyword
 
 == Changelog ==
+
+= 0.3 =
+* Esc closes the fullscreen gallery
 
 = 0.2 =
 * Arrows and close buttons fade out (not move) so they work also when hidden
