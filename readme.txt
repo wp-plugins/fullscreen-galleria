@@ -57,6 +57,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 0.4 =
+* Only scale images if they are larger than canvas
+
 = 0.3 =
 * Esc closes the fullscreen gallery
 

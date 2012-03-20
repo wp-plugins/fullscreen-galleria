@@ -4,14 +4,14 @@
 Plugin Name: Galleria Fullscreen
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.3
+Version: 0.4
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$ver = '0.3';
+$ver = '0.4';
 
 class GFSPlugin {
   protected $photobox = "fsg_photobox = {\n";
