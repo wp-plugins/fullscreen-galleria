@@ -17,11 +17,23 @@ $(document).ready(function() { // DOM ready
   }
 });
 
+set_keyboard = function(event) {
+  var galleria = $("#galleria").data('galleria');
+  galleria.attachKeyboard({
+    escape: function() {
+      if ($('#galleria-map').is(":visible")) {
+        $('.galleria-map-close').click();
+      } else {
+        $('.galleria-close').click();
+      }
+    }
+  });
+}
+
 show_galleria = function(event) {
   event.preventDefault();
   var elem = $("#galleria");
   var close = $("#close-galleria");
-  //var showimg = false;
   elem.toggle();
   close.toggle();
   var postid = $(this).attr("data-postid");
@@ -34,6 +46,7 @@ show_galleria = function(event) {
       elem.data('galleria')._options.show = parseInt(imgid);
       elem.data('galleria').load(fsg_json[postid]);
       elem.data('galleria').enterFullscreen();
+      set_keyboard();
     } else {
       // Init galleria
       elem.galleria({
@@ -47,6 +60,7 @@ show_galleria = function(event) {
         idleTime: 2000,
         extend: function() {
           this.enterFullscreen();
+          set_keyboard();
         }
       });
     }
@@ -54,6 +68,40 @@ show_galleria = function(event) {
   } else {
     elem.data('galleria').show(imgid);
     elem.data('galleria').enterFullscreen();
+    set_keyboard();
+  }
+}
+
+open_map = function(lat, long)
+{
+  $('#galleria-map').show();
+  if (typeof open_map.map == 'undefined') {
+    open_map.proj = new OpenLayers.Projection('EPSG:4326');
+    OpenLayers.ImgPath = fullscreen_galleria_url;
+    open_map.map = new OpenLayers.Map('galleria-map', {
+        controls:[
+            new OpenLayers.Control.Navigation(),
+            new OpenLayers.Control.PanZoomBar(),
+            new OpenLayers.Control.Attribution()]
+    });
+    open_map.map.addLayer(new OpenLayers.Layer.OSM());
+  }
+
+  var lonLat = new OpenLayers.LonLat(long, lat).transform(
+      open_map.proj, open_map.map.getProjectionObject());
+  open_map.map.setCenter(lonLat, 16);
+
+  if (typeof open_map.marker == 'undefined') {
+    var markers = new OpenLayers.Layer.Markers('Markers');
+    open_map.map.addLayer(markers);
+    var size = new OpenLayers.Size(35, 52);
+    var offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
+    var icon = new OpenLayers.Icon(fullscreen_galleria_url + 'marker.png', size, offset);
+    open_map.marker = new OpenLayers.Marker(lonLat, icon);
+    markers.addMarker(open_map.marker);
+  } else {
+    var px = open_map.map.getLayerPxFromLonLat(lonLat);
+    open_map.marker.moveTo(px);
   }
 }
 

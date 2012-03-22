@@ -34,12 +34,16 @@ Galleria.addTheme({
             'info' : ['info-link','info-close']
         });
 
-        this.addElement('close');
+        this.addElement('close', 'map', 'map-close');
         this.appendChild('container', 'close');
+        this.appendChild('container', 'map');
+        this.appendChild('map', 'map-close');
 
         // cache some stuff
         var info = this.$('info-link,info-close,info-text'),
             close = this.$('close'),
+            map   = this.$('map'),
+            map_close = this.$('map-close'),
             touch = Galleria.TOUCH,
             click = touch ? 'touchstart' : 'click';
 
@@ -73,9 +77,16 @@ Galleria.addTheme({
             this.$('info-link, info-close').hide();
         }
 
-        close.bind( click, function() {
+        map.attr('id', 'galleria-map'); // openlayers needs id
+        close.bind(click, function() {
+            if ($('#galleria-map').is(":visible")) {
+              $('#galleria-map').toggle();
+            }
             $('#galleria').toggle();
             $('#galleria').data('galleria').exitFullscreen();
+        });
+        map_close.bind(click, function() {
+            $('#galleria-map').toggle();
         });
 
         // bind some stuff
