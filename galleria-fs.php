@@ -4,14 +4,14 @@
 Plugin Name: Galleria Fullscreen
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.5
+Version: 0.5.1
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$ver = '0.5';
+$gfs_ver = '0.5.1';
 
 class GFSPlugin {
   protected $photobox = "fsg_photobox = {\n";
@@ -108,33 +108,28 @@ class GFSPlugin {
   {
     error_log($file);
     $exif = @exif_read_data($file);
-    error_log('1');
     if (!empty($exif['GPSLatitude'])) {
       $lat = $this->gps_to_degrees($exif['GPSLatitude']);
     }
-    error_log('2');
     if (!empty($exif['GPSLongitude'])) {
       $long = $this->gps_to_degrees($exif['GPSLongitude']);
     }
     if (!empty($exif['GPSLatitudeRef'])) {
-      if ($meta['image_meta']['latitude_ref'] == 'S') {
+      if ($exif['GPSLatitudeRef'] == 'S') {
         $lat *= -1;
       }
     }
-    error_log('3');
     if (!empty($exif['GPSLongitudeRef'])) {
-      if ($meta['image_meta']['longitude_ref'] == 'W') {
+      if ($exif['GPSLongitudeRef'] == 'W') {
         $long *= -1;
       }
     }
-    error_log('4');
     if (isset($long)) {
       $meta['longitude'] = $long;
     }
     if (isset($lat)) {
       $meta['latitude'] = $lat;
     }
-    error_log('5');
     return $meta;
   }
 
@@ -266,12 +261,13 @@ class GFSPlugin {
 
   function enqueue_scripts()
   {
+    global $gfs_ver;
     wp_enqueue_script('galleria', plugins_url('galleria-1.2.6.min.js', __FILE__), array('jquery'), '1.2.6', true);
     //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.6', true);
-    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $ver, true);
+    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $gfs_ver, true);
     // register here and print conditionally in footer
     wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.11', true);
-    wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $ver);
+    wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $gfs_ver);
     wp_enqueue_style('galleria-fs');
   }
 
