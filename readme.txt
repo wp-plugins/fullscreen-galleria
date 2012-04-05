@@ -58,6 +58,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 0.5.1 =
+* Fix gps coordinate uploading
+
 = 0.5 =
 * Add map for images that have gps coordinates
 
