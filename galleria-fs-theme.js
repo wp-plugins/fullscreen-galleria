@@ -83,7 +83,6 @@ Galleria.addTheme({
               $('#galleria-map').toggle();
             }
             $('#galleria').toggle();
-            $('#galleria').data('galleria').exitFullscreen();
         });
         map_close.bind(click, function() {
             $('#galleria-map').toggle();
