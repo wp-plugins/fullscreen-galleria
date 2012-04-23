@@ -1,24 +1,25 @@
 <?php
 /******************************************************************************
 
-Plugin Name: Galleria Fullscreen
+Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.5.1
+Version: 0.5.2
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$gfs_ver = '0.5.1';
+$fsg_ver = '0.5.2';
 
-class GFSPlugin {
+class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
   protected $json = "fsg_json = {\n";
   protected $gps = FALSE;
   protected $photoboxid = 0;
   protected $groupid = 0;
+  protected $firstpostid = -1;
   protected $used = Array();
 
   function startswith(&$str, &$starts)
@@ -261,13 +262,14 @@ class GFSPlugin {
 
   function enqueue_scripts()
   {
-    global $gfs_ver;
-    wp_enqueue_script('galleria', plugins_url('galleria-1.2.6.min.js', __FILE__), array('jquery'), '1.2.6', true);
-    //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.6', true);
-    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $gfs_ver, true);
+    global $fsg_ver;
+    wp_enqueue_script('galleria', plugins_url('galleria-1.2.7.min.js', __FILE__), array('jquery'), '1.2.7', true);
+    //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.7', true);
+    wp_enqueue_script('galleria-permalink', plugins_url('galleria.permalink.js', __FILE__), array('jquery'), $fsg_ver, true);
+    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, true);
     // register here and print conditionally in footer
     wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.11', true);
-    wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $gfs_ver);
+    wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $fsg_ver);
     wp_enqueue_style('galleria-fs');
   }
 
@@ -281,8 +283,9 @@ class GFSPlugin {
       $this->photobox .= "};\n";
       $theme = plugins_url('galleria-fs-theme.js', __FILE__);
       $url = "fullscreen_galleria_url='".plugin_dir_url(__FILE__)."';\n";
+      $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
       echo "<div id=\"galleria\"></div><script>Galleria.loadTheme(\"".$theme."\");\n".
-           $url.$this->photobox.$this->json."</script>";
+           $url.$postid.$this->photobox.$this->json."</script>";
     }
   }
 
@@ -366,12 +369,21 @@ class GFSPlugin {
   function content($content)
   {
     global $post;
+    if ($this->firstpostid == -1) {
+      $this->firstpostid = $post->ID;
+    }
     // Get children (images) of the post
     $children = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
         'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
         'orderby' => 'menu_order ID'));
     if (empty($children)) {
-      return $content;
+      if (substr(get_post_mime_type($post->ID), 0, 5) == 'image') {
+        $children = &get_posts(array('post_type' => 'attachment',
+            'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
+            'include' => $post->ID));
+      } else {
+        return $content;
+      }
     }
     $images = array();
     foreach ($children as $key => $val) {
@@ -398,6 +410,6 @@ class GFSPlugin {
   }
 }
 
-$gfsplugin = new GFSPlugin();
+$fsgplugin = new FSGPlugin();
 
 ?>
