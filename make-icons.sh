@@ -2,7 +2,7 @@
 
 IMAGES="./"
 
-inkscape --export-png=$IMAGES"fs-map.png" --export-area=0:0:216:24 --export-width=216 --export-height=24 --export-background=#000000 --export-background-opacity=0.0 "galleria-fs-icons.svg"
+inkscape --export-png=$IMAGES"fs-map.png" --export-area=0:0:240:24 --export-width=240 --export-height=24 --export-background=#000000 --export-background-opacity=0.0 "galleria-fs-icons.svg"
 
 inkscape --export-png=$IMAGES"blank.gif" --export-area=0:0:1:1 --export-width=1 --export-height=1 --export-background=#000000 --export-background-opacity=0.0 "galleria-fs-icons.svg"
 

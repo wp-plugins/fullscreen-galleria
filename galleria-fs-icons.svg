@@ -14,7 +14,7 @@
    height="42"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.2 r9819"
+   inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="galleria-fs-icons.svg"
    inkscape:export-filename="/home/damu/public_html/www.torturedmind.org/wp-content/themes/torturedmind/images/buttons24.png"
    inkscape:export-xdpi="90"
@@ -419,14 +419,14 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.8"
      inkscape:pageshadow="2"
-     inkscape:zoom="13.073423"
-     inkscape:cx="181.08333"
-     inkscape:cy="49.000015"
+     inkscape:zoom="49.208333"
+     inkscape:cx="228"
+     inkscape:cy="12"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1920"
-     inkscape:window-height="1159"
+     inkscape:window-width="2560"
+     inkscape:window-height="1399"
      inkscape:window-x="-3"
      inkscape:window-y="-3"
      inkscape:window-maximized="1"
@@ -434,7 +434,7 @@
      inkscape:guide-bbox="true"
      guidecolor="#0bc400"
      guideopacity="0.49803922"
-     inkscape:snap-global="false">
+     inkscape:snap-global="true">
     <inkscape:grid
        type="xygrid"
        id="grid3004"
@@ -901,5 +901,12 @@
        id="path3801-4"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccscssssssccccccssssssssss" />
+    <path
+       style="color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+       d="m 222,18 c -3.324,0 -6,2.676 -6,6 l 0,12 c 0,3.324 2.676,6 6,6 l 12,0 c 3.324,0 6,-2.676 6,-6 l 0,-12 c 0,-3.324 -2.676,-6 -6,-6 z m 0,4 12,0 0,16 -6,-4 -6,4 z m 6,2.25 -0.90625,2.75 -2.90625,0.03125 2.34375,1.71875 -0.875,2.75 L 228,29.8125 230.34375,31.5 229.46875,28.75 231.8125,27.03125 228.90625,27 z"
+       transform="translate(0,1010.3622)"
+       id="path3175"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="sssssssssccccccccccccccccc" />
   </g>
 </svg>

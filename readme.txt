@@ -58,6 +58,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 0.5.3 =
+* Show permalink/bookmark icon in image info
+
 = 0.5.2 =
 * Update [Galleria](http://galleria.io/) to 1.2.7
 * Permalink support (http://site/post/#0 opens first image to galleria)

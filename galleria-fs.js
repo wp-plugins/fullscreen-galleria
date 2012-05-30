@@ -20,7 +20,7 @@ $(document).ready(function() { // DOM ready
   if (hash.length > 0) {
     var postid = 'fsg_post_' + fullscreen_galleria_postid;
     var imgid = hash.substring(1);
-    $('[data-imgid="' + imgid + '"][data-postid="' + postid + '"]', this).click();
+    $('[data-imgid="' + imgid + '"][data-postid="' + postid + '"]', this).first().click();
   }
 });
 
