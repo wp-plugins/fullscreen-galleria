@@ -54,7 +54,7 @@
 }
 
 #galleria {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -246,6 +246,23 @@
     opacity: 1;
     filter: alpha(opacity=100);
 }
+.galleria-link-bookmark {
+    z-index: 3;
+    width: 24px;
+    height: 24px;
+    background-position: -216px 0px;
+    opacity: .7;
+    filter: alpha(opacity=70);
+    cursor: pointer;
+}
+.notouch .galleria-link-bookmark:hover {
+    opacity: 1;
+    filter: alpha(opacity=100);
+}
+.touch .galleria-link-bookmark:active {
+    opacity: 1;
+    filter: alpha(opacity=100);
+}
 .galleria-link-map {
     z-index: 3;
     width: 24px;
@@ -385,6 +402,7 @@
 .galleria-link-flickr,
 .galleria-link-refresh,
 .galleria-link-map,
+.galleria-link-bookmark,
 .galleria-thumb-nav-left,
 .galleria-thumb-nav-right,
 .galleria-info-link,

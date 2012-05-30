@@ -13,7 +13,7 @@ A simple fullscreen gallery to Wordpress
 
 == Description ==
 
-Full screen gallery for Wordpress. Based on [Galleria](http://galleria.io/) JavaScript image gallery framework.
+Fullscreen gallery for Wordpress. Based on [Galleria](http://galleria.io/) JavaScript image gallery framework.
 
 #### Features
 
@@ -57,6 +57,13 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+
+= 0.5.3 =
+* Show permalink/bookmark icon in image info
+
+= 0.5.2 =
+* Update [Galleria](http://galleria.io/) to 1.2.7
+* Permalink support (http://site/post/#0 opens first image to galleria)
 
 = 0.5.1 =
 * Fix gps coordinate uploading
