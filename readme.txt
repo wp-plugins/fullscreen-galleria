@@ -37,6 +37,7 @@ None
 = Clicking image shows attachment page =
 
 Gallery settings should have thumbnails linked to image file:
+
 * Link thumbnails to: [x] Image File  [ ] Attachment Page
 
 = fsg_photobox keyword =
