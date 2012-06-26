@@ -1,24 +1,25 @@
 <?php
 /******************************************************************************
 
-Plugin Name: Galleria Fullscreen
+Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.5.1
+Version: 0.5.4
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$gfs_ver = '0.5.1';
+$fsg_ver = '0.5.4';
 
-class GFSPlugin {
+class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
   protected $json = "fsg_json = {\n";
   protected $gps = FALSE;
   protected $photoboxid = 0;
   protected $groupid = 0;
+  protected $firstpostid = -1;
   protected $used = Array();
 
   function startswith(&$str, &$starts)
@@ -156,7 +157,8 @@ class GFSPlugin {
     $images = array();
     foreach ($photos as $key => $val) {
       $images[$this->href(wp_get_attachment_link($val->ID, 'full'))] =
-          array('post_id' => $val->ID, 'id' => 0, 'data' => $val);
+          array('post_id' => $val->ID, 'id' => 0, 'data' => $val,
+                'permalink' => get_permalink($val->ID).'#0');
     }
     $id = 'fsg_photobox_'.$this->photoboxid;
     $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".$border."},\n";
@@ -189,7 +191,8 @@ class GFSPlugin {
     $images = array();
     foreach ($photos as $key => $val) {
       $images[$this->href(wp_get_attachment_link($val->ID, 'full'))] =
-          array('post_id' => $val->ID, 'id' => 0, 'data' => $val);
+          array('post_id' => $val->ID, 'id' => 0, 'data' => $val,
+                'permalink' => get_permalink($val->ID).'#0');
     }
     if (!empty($include)) {
       $this->append_json($id, $images);
@@ -261,13 +264,13 @@ class GFSPlugin {
 
   function enqueue_scripts()
   {
-    global $gfs_ver;
-    wp_enqueue_script('galleria', plugins_url('galleria-1.2.6.min.js', __FILE__), array('jquery'), '1.2.6', true);
-    //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.6', true);
-    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $gfs_ver, true);
+    global $fsg_ver;
+    wp_enqueue_script('galleria', plugins_url('galleria-1.2.7.min.js', __FILE__), array('jquery'), '1.2.7', true);
+    //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.7', true);
+    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, true);
     // register here and print conditionally in footer
     wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.11', true);
-    wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $gfs_ver);
+    wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $fsg_ver);
     wp_enqueue_style('galleria-fs');
   }
 
@@ -277,12 +280,15 @@ class GFSPlugin {
     // json/galleria loading code
     wp_print_scripts(($this->gps) ? 'open-layers' : '');
     if (!empty($this->json)) {
-      $this->json .= "};";
-      $this->photobox .= "};\n";
+      $this->json = rtrim($this->json, ",\n");
+      $this->json .= "\n};";
+      $this->photobox = rtrim($this->photobox, ",\n");
+      $this->photobox .= "\n};\n";
       $theme = plugins_url('galleria-fs-theme.js', __FILE__);
       $url = "fullscreen_galleria_url='".plugin_dir_url(__FILE__)."';\n";
+      $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
       echo "<div id=\"galleria\"></div><script>Galleria.loadTheme(\"".$theme."\");\n".
-           $url.$this->photobox.$this->json."</script>";
+           $url.$postid.$this->photobox.$this->json."</script>";
     }
   }
 
@@ -340,14 +346,24 @@ class GFSPlugin {
         } else {
           $map = '';
         }
+        $permalink = $val['permalink'];
+        if (!empty($permalink)) {
+          $bookmark = "<div class=\"galleria-layeritem\">".
+                      "<a title=\"Permalink\" href=\"".$permalink."\">".
+                      "<div class=\"galleria-link-bookmark\"></div></a>".
+                  "</div>";
+        } else {
+          $bookmark = '';
+        }
         $info = (empty($meta['image_meta']['info'])) ? '' :
                 "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
         $this->json .= "{image: '".$key.
                       "', thumb: '".$thumb.
+                      "', permalink: '".$permalink.
                       "', layer: '<div class=\"galleria-infolayer\">".
                           "<div class=\"galleria-layeritem\">".
                               "<h1>".$title."</h1>".$description.$info.
-                          "</div>".$link.$map."</div>'";
+                          "</div>".$link.$map.$bookmark."</div>'";
         if ($extra) {
           foreach (array("thumbnail", "medium", "large", "full") as $size) {
             $img = wp_get_attachment_image_src($val['post_id'], $size);
@@ -359,24 +375,37 @@ class GFSPlugin {
         ++$i;
       }
     }
-    $this->json .= "],\n";
+    $this->json = rtrim($this->json, ",\n");
+    $this->json .= "\n],\n";
   }
 
   // Handle gallery
   function content($content)
   {
     global $post;
+    if ($this->firstpostid == -1) {
+      $this->firstpostid = $post->ID;
+    }
     // Get children (images) of the post
     $children = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
         'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
         'orderby' => 'menu_order ID'));
     if (empty($children)) {
-      return $content;
+      if (substr(get_post_mime_type($post->ID), 0, 5) == 'image') {
+        $children = &get_posts(array('post_type' => 'attachment',
+            'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
+            'include' => $post->ID));
+      } else {
+        return $content;
+      }
     }
     $images = array();
+    $i = 0;
     foreach ($children as $key => $val) {
       $images[$this->href(wp_get_attachment_link($key, 'full'))] =
-          array('post_id' => $key, 'id' => 0, 'data' => $val);
+          array('post_id' => $key, 'id' => 0, 'data' => $val,
+                'permalink' => get_permalink($post->ID).'#'.$i);
+      ++$i;
     }
 
     // Get possible image groups
@@ -398,6 +427,6 @@ class GFSPlugin {
   }
 }
 
-$gfsplugin = new GFSPlugin();
+$fsgplugin = new FSGPlugin();
 
 ?>

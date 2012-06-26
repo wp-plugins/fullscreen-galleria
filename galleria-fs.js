@@ -15,6 +15,18 @@ $(document).ready(function() { // DOM ready
   if($(".galleria-photobox").length != 0) {
     randomize_photos();
   }
+
+  var hash = window.location.hash;
+  if (hash.length > 0) {
+    var postid = 'fsg_post_' + fullscreen_galleria_postid;
+    var imgid = hash.substring(1);
+    $('[data-imgid="' + imgid + '"][data-postid="' + postid + '"]', this).first().click();
+  }
+});
+
+$(window).resize(function() { // window resized
+  var galleria = $("#galleria").data('galleria');
+  galleria.resize();
 });
 
 set_keyboard = function(event) {
@@ -45,7 +57,6 @@ show_galleria = function(event) {
       // works purely after load
       elem.data('galleria')._options.show = parseInt(imgid);
       elem.data('galleria').load(fsg_json[postid]);
-      elem.data('galleria').enterFullscreen();
       set_keyboard();
     } else {
       // Init galleria
@@ -59,7 +70,6 @@ show_galleria = function(event) {
         maxScaleRatio: 1.0,
         idleTime: 2000,
         extend: function() {
-          this.enterFullscreen();
           set_keyboard();
         }
       });
@@ -67,7 +77,6 @@ show_galleria = function(event) {
     fsg_last_post_id = postid;
   } else {
     elem.data('galleria').show(imgid);
-    elem.data('galleria').enterFullscreen();
     set_keyboard();
   }
 }
