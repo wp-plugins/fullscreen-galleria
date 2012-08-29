@@ -50,19 +50,26 @@ show_galleria = function(event) {
   close.toggle();
   var postid = $(this).attr("data-postid");
   var imgid = $(this).attr("data-imgid");
+  id = 0;
+  for (var i = 0; i < fsg_json[postid].length; ++i) {
+    if (fsg_json[postid][i]['id'] == imgid) {
+      id = i;
+      break;
+    }
+  }
   if (postid != fsg_last_post_id) {
     if (elem.data('galleria')) {
       // Set new data
       // Bit of a hack, but load does not have show param and show function
       // works purely after load
-      elem.data('galleria')._options.show = parseInt(imgid);
+      elem.data('galleria')._options.show = id;
       elem.data('galleria').load(fsg_json[postid]);
       set_keyboard();
     } else {
       // Init galleria
       elem.galleria({
         dataSource: fsg_json[postid],
-        show: imgid,
+        show: id,
         showCounter: false,
         fullscreenDoubleTap: false,
         imageCrop: false,
@@ -76,7 +83,7 @@ show_galleria = function(event) {
     }
     fsg_last_post_id = postid;
   } else {
-    elem.data('galleria').show(imgid);
+    elem.data('galleria').show(id);
     set_keyboard();
   }
 }
@@ -196,12 +203,13 @@ randomize_photos = function()
       // Add photo div
       var size = (box * BOX - 2 * BORDER);
       var img = fsg_json[ID][photo]['image'];
+      var imgid = fsg_json[ID][photo]['id'];
       var w = fsg_json[ID][photo]['full'][1];
       var h = fsg_json[ID][photo]['full'][2];
       //console.log(size, y, x, y * BOX, x * BOX);
       var $div = $('<div style="width: ' + size + 'px; height: ' + size + 'px; top: ' + y * BOX +
                   'px; left: ' + x * BOX + 'px; margin: ' + BORDER + 'px;">');
-      var $a = $('<a data-postid="' + ID + '" data-imgid="' + photo + '" href="' + img + '">');
+      var $a = $('<a data-postid="' + ID + '" data-imgid="' + imgid + '" href="' + img + '">');
       $($a).click(show_galleria);
       // - Find best img
       var a = ["thumbnail", "medium", "large", "full"];

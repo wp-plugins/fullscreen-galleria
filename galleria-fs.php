@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.5.4
+Version: 0.5.5
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '0.5.4';
+$fsg_ver = '0.5.5';
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
@@ -304,7 +304,6 @@ class FSGPlugin {
   function append_json($id, &$images, $extra = false)
   {
     // Write json data for galleria
-    $i = 0;
     $this->json .= $id.": [\n";
     foreach ($images as $key => $val) {
       if (!in_array($val['post_id'], $this->used)) {
@@ -357,7 +356,8 @@ class FSGPlugin {
         }
         $info = (empty($meta['image_meta']['info'])) ? '' :
                 "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
-        $this->json .= "{image: '".$key.
+        $this->json .= "{id: ".$val['post_id'].
+                      ", image: '".$key.
                       "', thumb: '".$thumb.
                       "', permalink: '".$permalink.
                       "', layer: '<div class=\"galleria-infolayer\">".
@@ -371,8 +371,7 @@ class FSGPlugin {
           }
         }
         $this->json .= "},\n";
-        $images[$key]['id'] = $i;
-        ++$i;
+        $images[$key]['id'] = $val['post_id'];
       }
     }
     $this->json = rtrim($this->json, ",\n");
@@ -400,12 +399,10 @@ class FSGPlugin {
       }
     }
     $images = array();
-    $i = 0;
     foreach ($children as $key => $val) {
       $images[$this->href(wp_get_attachment_link($key, 'full'))] =
           array('post_id' => $key, 'id' => 0, 'data' => $val,
-                'permalink' => get_permalink($post->ID).'#'.$i);
-      ++$i;
+                'permalink' => get_permalink($post->ID).'#'.$key);
     }
 
     // Get possible image groups
