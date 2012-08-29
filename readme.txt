@@ -5,7 +5,7 @@ Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
 Requires at least: 3.3
-Tested up to: 3.3.1
+Tested up to: 3.4.1
 Stable tag: trunk
 License: MIT
 
@@ -63,6 +63,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+
+= 0.5.5 =
+* Fix permalink to use wordpress ids. Fixes ids when more pictures are added to existing post. Sadly breaks old permalinks.
 
 = 0.5.4 =
 * Make better json
