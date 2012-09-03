@@ -19,6 +19,7 @@ Fullscreen gallery for Wordpress. Based on [Galleria](http://galleria.io/) JavaS
 
 * Clean fullscreen interface. Only image and carousel is shown when idle.
 * Custom link support for media eg. link to Flickr page that is shown for the image.
+* If image has gps coordinates it can be shown on map.
 
 #### Usage
 
