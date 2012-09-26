@@ -5,7 +5,7 @@ Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
 Requires at least: 3.3
-Tested up to: 3.4.1
+Tested up to: 3.4.2
 Stable tag: trunk
 License: MIT
 
@@ -65,6 +65,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 0.5.6 =
+* Updated [Galleria](http://galleria.io/) to 1.2.8. Swiping should work better.
+
 = 0.5.5 =
 * Fix permalink to use wordpress ids. Fixes ids when more pictures are added to existing post. Sadly breaks old permalinks.
 
@@ -75,7 +78,7 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 * Show permalink/bookmark icon in image info
 
 = 0.5.2 =
-* Update [Galleria](http://galleria.io/) to 1.2.7
+* Updated [Galleria](http://galleria.io/) to 1.2.7
 * Permalink support (http://site/post/#0 opens first image to galleria)
 
 = 0.5.1 =
