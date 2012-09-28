@@ -65,6 +65,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 0.5.7 =
+* Handle quotes in camera info too.
+
 = 0.5.6 =
 * Updated [Galleria](http://galleria.io/) to 1.2.8. Swiping should work better.
 

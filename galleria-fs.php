@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.5.6
+Version: 0.5.7
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '0.5.6';
+$fsg_ver = '0.5.7';
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
@@ -310,11 +310,11 @@ class FSGPlugin {
         $meta = wp_get_attachment_metadata($val['post_id']);
         $thumb = wp_get_attachment_image_src($val['post_id'], 'thumbnail');
         $thumb = $thumb[0];
-        $title = str_replace("'", "\\'", $val['data']->post_title);
+        $title = addslashes($val['data']->post_title);
         //var_dump($val['data']);
         $description = $val['data']->post_content;
         if (!empty($description)) {
-          $description = str_replace("'", "\\'", $description);
+          $description = addslashes($description);
           $description = str_replace("\n", "<br/>", $description);
           $description = str_replace("\r", "", $description);
           $description = "<p class=\"galleria-info-description\">".$description."</p>";
@@ -356,6 +356,7 @@ class FSGPlugin {
         }
         $info = (empty($meta['image_meta']['info'])) ? '' :
                 "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
+        $info = addslashes($info);
         $this->json .= "{id: ".$val['post_id'].
                       ", image: '".$key.
                       "', thumb: '".$thumb.
