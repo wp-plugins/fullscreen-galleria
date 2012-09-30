@@ -64,6 +64,7 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 * right, space, N - Next picture
 * S - Start/stop slideshow
 * M - Show map
+* F - Fullscreen mode
 
 == Screenshots ==
 
@@ -76,6 +77,7 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 = 0.6.0 =
 * Support for include option in gallery.
 * Better keyboard support (see FAQ)
+* Fullscreen mode (Press F). This needs some further testing.
 
 = 0.5.7 =
 * Handle quotes in camera info too.
