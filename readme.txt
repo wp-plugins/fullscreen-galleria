@@ -5,7 +5,7 @@ Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
 Requires at least: 3.3
-Tested up to: 3.4.1
+Tested up to: 3.4.2
 Stable tag: trunk
 License: MIT
 
@@ -19,6 +19,7 @@ Fullscreen gallery for Wordpress. Based on [Galleria](http://galleria.io/) JavaS
 
 * Clean fullscreen interface. Only image and carousel is shown when idle.
 * Custom link support for media eg. link to Flickr page that is shown for the image.
+* If image has gps coordinates it can be shown on map.
 
 #### Usage
 
@@ -56,6 +57,14 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 * **include** - specify list of images (default is all images attached to post/page)
 * **class** - class for a tag (default is none)
 
+= keyboard shortcuts =
+
+* esc - closes map/gallery
+* left, P - Previous picture
+* right, space, N - Next picture
+* S - Start/stop slideshow
+* M - Show map
+
 == Screenshots ==
 
 1. Fullscreen Galleria in action.
@@ -63,6 +72,16 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+
+= 0.6.0 =
+* Support for include option in gallery.
+* Better keyboard support (see FAQ)
+
+= 0.5.7 =
+* Handle quotes in camera info too.
+
+= 0.5.6 =
+* Updated [Galleria](http://galleria.io/) to 1.2.8. Swiping should work better.
 
 = 0.5.5 =
 * Fix permalink to use wordpress ids. Fixes ids when more pictures are added to existing post. Sadly breaks old permalinks.
@@ -74,7 +93,7 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 * Show permalink/bookmark icon in image info
 
 = 0.5.2 =
-* Update [Galleria](http://galleria.io/) to 1.2.7
+* Updated [Galleria](http://galleria.io/) to 1.2.7
 * Permalink support (http://site/post/#0 opens first image to galleria)
 
 = 0.5.1 =

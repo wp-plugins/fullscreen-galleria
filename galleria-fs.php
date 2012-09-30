@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.5.5
+Version: 0.6.0
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '0.5.5';
+$fsg_ver = '0.6.0';
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
@@ -25,6 +25,20 @@ class FSGPlugin {
   function startswith(&$str, &$starts)
   {
     return (strncmp($str, $starts, strlen($starts)) == 0);
+  }
+  
+  function endswith(&$str, &$ends)
+  {
+    return (substr($str, -strlen($ends)) === $ends);
+  }
+  
+  function get_attachment_id_from_src($src) 
+  {
+		global $wpdb;
+    if (WP_DEBUG) {
+      $src = str_replace(".localhost", ".org", $src);
+    }
+		return $wpdb->get_var("SELECT ID FROM {$wpdb->posts} WHERE guid='$src'");
   }
 
   function tagarg(&$tag, $arg)
@@ -265,8 +279,8 @@ class FSGPlugin {
   function enqueue_scripts()
   {
     global $fsg_ver;
-    wp_enqueue_script('galleria', plugins_url('galleria-1.2.7.min.js', __FILE__), array('jquery'), '1.2.7', true);
-    //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.7', true);
+    wp_enqueue_script('galleria', plugins_url('galleria-1.2.8.min.js', __FILE__), array('jquery'), '1.2.8', true);
+    //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.8', true);
     wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, true);
     // register here and print conditionally in footer
     wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.11', true);
@@ -310,11 +324,11 @@ class FSGPlugin {
         $meta = wp_get_attachment_metadata($val['post_id']);
         $thumb = wp_get_attachment_image_src($val['post_id'], 'thumbnail');
         $thumb = $thumb[0];
-        $title = str_replace("'", "\\'", $val['data']->post_title);
+        $title = addslashes($val['data']->post_title);
         //var_dump($val['data']);
         $description = $val['data']->post_content;
         if (!empty($description)) {
-          $description = str_replace("'", "\\'", $description);
+          $description = addslashes($description);
           $description = str_replace("\n", "<br/>", $description);
           $description = str_replace("\r", "", $description);
           $description = "<p class=\"galleria-info-description\">".$description."</p>";
@@ -338,7 +352,8 @@ class FSGPlugin {
         if (!empty($meta['image_meta']['longitude'])) {
           $c = $meta['image_meta']['latitude'].",".$meta['image_meta']['longitude'];
           $map = "<div class=\"galleria-layeritem\">".
-                      "<a title=\"Open Map\" href=\"#\" onclick=\"open_map(".$c.");\">".
+                      "<a id=\"fsg_map_btn\" title=\"Open Map\"".
+                      " href=\"#\" onclick=\"open_map(".$c.");\">".
                       "<div class=\"galleria-link-map\"></div></a>".
                   "</div>";
           $this->gps = TRUE;
@@ -356,6 +371,7 @@ class FSGPlugin {
         }
         $info = (empty($meta['image_meta']['info'])) ? '' :
                 "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
+        $info = addslashes($info);
         $this->json .= "{id: ".$val['post_id'].
                       ", image: '".$key.
                       "', thumb: '".$thumb.
@@ -394,32 +410,40 @@ class FSGPlugin {
         $children = &get_posts(array('post_type' => 'attachment',
             'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
             'include' => $post->ID));
-      } else {
-        return $content;
       }
     }
     $images = array();
     foreach ($children as $key => $val) {
       $images[$this->href(wp_get_attachment_link($key, 'full'))] =
-          array('post_id' => $key, 'id' => 0, 'data' => $val,
+          array('post_id' => $key, 'id' => $key, 'data' => $val,
                 'permalink' => get_permalink($post->ID).'#'.$key);
     }
 
-    // Get possible image groups
     $links = $this->links($content);
-    $this->append_json('fsg_post_'.$post->ID, $images);
 
     // Add needed data to links
+    $upload_dir = wp_upload_dir();
+    $media = $upload_dir['baseurl'];
     foreach ($links as $link) {
       if (strpos($link, 'data-postid') === false) { // test if link already has the data
         $href = $this->href($link);
+        if (!array_key_exists($href, $images) && $this->startswith($href, $media)) {
+          // We have images from other posts (include)
+          $id = $this->get_attachment_id_from_src($href);
+          $photos = &get_posts(array('post_type' => 'attachment',
+              'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
+              'include' => $id));
+          $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
+                                 'permalink' => get_permalink($id).'#0');
+        }
         if (array_key_exists($href, $images)) {
           $tmp = str_replace('<a ', '<a data-postid="fsg_post_'.$post->ID.
-                            '" data-imgid="'.$images[$href]['id'].'" ', $link);
+                             '" data-imgid="'.$images[$href]['id'].'" ', $link);
           $content = str_replace($link, $tmp, $content);
         }
       }
     }
+    $this->append_json('fsg_post_'.$post->ID, $images);
     return $content;
   }
 }
