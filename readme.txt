@@ -74,6 +74,10 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 0.6.1 =
+* Check if external attachment really exists. Fixes PDF attachments.
+* Check if exif support for PHP installed. Fixes media upload errors.
+
 = 0.6.0 =
 * Support for include option in gallery.
 * Better keyboard support (see FAQ)

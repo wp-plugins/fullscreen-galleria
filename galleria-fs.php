@@ -11,7 +11,7 @@ License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '0.6.0';
+$fsg_ver = '0.6.1';
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
@@ -121,29 +121,32 @@ class FSGPlugin {
 
   function add_additional_metadata($meta, $file, $sourceImageType)
   {
-    error_log($file);
-    $exif = @exif_read_data($file);
-    if (!empty($exif['GPSLatitude'])) {
-      $lat = $this->gps_to_degrees($exif['GPSLatitude']);
-    }
-    if (!empty($exif['GPSLongitude'])) {
-      $long = $this->gps_to_degrees($exif['GPSLongitude']);
-    }
-    if (!empty($exif['GPSLatitudeRef'])) {
-      if ($exif['GPSLatitudeRef'] == 'S') {
-        $lat *= -1;
+    if (is_callable('exif_read_data')) {
+      $exif = @exif_read_data($file);
+      if (!empty($exif['GPSLatitude'])) {
+        $lat = $this->gps_to_degrees($exif['GPSLatitude']);
       }
-    }
-    if (!empty($exif['GPSLongitudeRef'])) {
-      if ($exif['GPSLongitudeRef'] == 'W') {
-        $long *= -1;
+      if (!empty($exif['GPSLongitude'])) {
+        $long = $this->gps_to_degrees($exif['GPSLongitude']);
       }
-    }
-    if (isset($long)) {
-      $meta['longitude'] = $long;
-    }
-    if (isset($lat)) {
-      $meta['latitude'] = $lat;
+      if (!empty($exif['GPSLatitudeRef'])) {
+        if ($exif['GPSLatitudeRef'] == 'S') {
+          $lat *= -1;
+        }
+      }
+      if (!empty($exif['GPSLongitudeRef'])) {
+        if ($exif['GPSLongitudeRef'] == 'W') {
+          $long *= -1;
+        }
+      }
+      if (isset($long)) {
+        $meta['longitude'] = $long;
+      }
+      if (isset($lat)) {
+        $meta['latitude'] = $lat;
+      }
+    } else {
+      error_log('Cannot read exif. exif_read_data not callable.');
     }
     return $meta;
   }
@@ -430,11 +433,13 @@ class FSGPlugin {
         if (!array_key_exists($href, $images) && $this->startswith($href, $media)) {
           // We have images from other posts (include)
           $id = $this->get_attachment_id_from_src($href);
-          $photos = &get_posts(array('post_type' => 'attachment',
-              'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
-              'include' => $id));
-          $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
-                                 'permalink' => get_permalink($id).'#0');
+          if ($id != NULL) {
+            $photos = &get_posts(array('post_type' => 'attachment',
+                'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
+                'include' => $id));
+            $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
+                                   'permalink' => get_permalink($id).'#0');
+          }
         }
         if (array_key_exists($href, $images)) {
           $tmp = str_replace('<a ', '<a data-postid="fsg_post_'.$post->ID.
