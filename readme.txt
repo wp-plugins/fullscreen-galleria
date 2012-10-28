@@ -41,6 +41,10 @@ Gallery settings should have thumbnails linked to image file:
 
 * Link thumbnails to: [x] Image File  [ ] Attachment Page
 
+or in HTML mode:
+
+* [gallery link="file"]
+
 = fsg_photobox keyword =
 
 Adds random photobox to the page. eg. [fsg_photobox include="244, 243,242,241,208,207,206,205,204" rows="6" cols="4"] See live example [here](http://torturedmind.org/photos/).
