@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.6.1
+Version: 0.6.2
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '0.6.1';
+$fsg_ver = '0.6.2';
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
@@ -437,8 +437,10 @@ class FSGPlugin {
             $photos = &get_posts(array('post_type' => 'attachment',
                 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
                 'include' => $id));
-            $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
-                                   'permalink' => get_permalink($id).'#0');
+            if (count($photos) > 0) {
+                $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
+                                       'permalink' => get_permalink($id).'#0');
+            }
           }
         }
         if (array_key_exists($href, $images)) {
