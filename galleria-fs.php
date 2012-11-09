@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.6.1
+Version: 0.6.3
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '0.6.1';
+$fsg_ver = '0.6.3';
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
@@ -283,7 +283,7 @@ class FSGPlugin {
   {
     global $fsg_ver;
     wp_enqueue_script('galleria', plugins_url('galleria-1.2.8.min.js', __FILE__), array('jquery'), '1.2.8', true);
-    //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.8', true);
+    //wp_enqueue_script('galleria', plugins_url('galleria-1.2.8.js', __FILE__), array('jquery'), '1.2.8', true);
     wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, true);
     // register here and print conditionally in footer
     wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.11', true);
@@ -437,8 +437,10 @@ class FSGPlugin {
             $photos = &get_posts(array('post_type' => 'attachment',
                 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
                 'include' => $id));
-            $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
-                                   'permalink' => get_permalink($id).'#0');
+            if (count($photos) > 0) {
+                $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
+                                       'permalink' => get_permalink($id).'#0');
+            }
           }
         }
         if (array_key_exists($href, $images)) {

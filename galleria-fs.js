@@ -26,7 +26,9 @@ $(document).ready(function() { // DOM ready
 
 $(window).resize(function() { // window resized
   var galleria = $("#galleria").data('galleria');
-  galleria.resize();
+  if (galleria != undefined) {
+    galleria.resize();
+  }
 });
 
 set_keyboard = function(event) {
