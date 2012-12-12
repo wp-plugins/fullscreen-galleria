@@ -37,7 +37,7 @@ set_keyboard = function(event) {
     escape: function() {
       if ($('#galleria-map').is(":visible")) {
         $('.galleria-map-close').click();
-      } else {
+      } else if ($('#galleria').is(":visible")) {
         $('.galleria-close').click();
       }
     },
