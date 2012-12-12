@@ -26,7 +26,9 @@ $(document).ready(function() { // DOM ready
 
 $(window).resize(function() { // window resized
   var galleria = $("#galleria").data('galleria');
-  galleria.resize();
+  if (galleria != undefined) {
+    galleria.resize();
+  }
 });
 
 set_keyboard = function(event) {
@@ -35,7 +37,7 @@ set_keyboard = function(event) {
     escape: function() {
       if ($('#galleria-map').is(":visible")) {
         $('.galleria-map-close').click();
-      } else {
+      } else if ($('#galleria').is(":visible")) {
         $('.galleria-close').click();
       }
     },
