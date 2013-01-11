@@ -78,6 +78,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 0.6.5 =
+* Updated [Galleria](http://galleria.io/) to 1.2.9
+
 = 0.6.4 =
 * Fix ESC key. Patch from Vala.
 
