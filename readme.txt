@@ -5,7 +5,7 @@ Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
 Requires at least: 3.3
-Tested up to: 3.5
+Tested up to: 3.5.1
 Stable tag: trunk
 License: MIT
 
@@ -77,6 +77,10 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+
+= 0.6.6 =
+* Fill camera info from exif on upload.
+* Only show images that are linked to image file in carousel.
 
 = 0.6.5 =
 * Updated [Galleria](http://galleria.io/) to 1.2.9

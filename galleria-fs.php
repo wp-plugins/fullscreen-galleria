@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.6.5
+Version: 0.6.6
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '0.6.5';
+$fsg_ver = '0.6.6';
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
@@ -114,9 +114,71 @@ class FSGPlugin {
     add_action('wp_footer', array(&$this, 'footer'));
     add_filter('attachment_fields_to_edit', array(&$this, 'fields_to_edit'), 10, 2);
     add_filter('attachment_fields_to_save', array(&$this, 'fields_to_save'), 10, 2);
-    add_filter('wp_read_image_metadata', array(&$this, 'add_additional_metadata'), '', 3);
+    add_filter('wp_read_image_metadata', array(&$this, 'add_additional_metadata'), '', 5);
     add_shortcode('fsg_photobox', array(&$this, 'photobox_shortcode'));
     add_shortcode('fsg_link', array(&$this, 'link_shortcode'));
+  }
+
+  function ob_log($ob)
+  {
+    ob_start();
+    var_dump($ob);
+    $contents = ob_get_contents();
+    ob_end_clean();
+    error_log($contents);
+  }
+  
+  function camera_info($exif)
+  {
+    $camera = '';
+    $lens = '';
+    $focal = '';
+    $f = '';
+    $s = '';
+    $iso = '';
+    if (!empty($exif['Model'])) {
+      $camera = $exif['Model'];
+    }
+    if (!empty($exif['Make'])) {
+      $make = $exif['Make'];
+    }
+    if (substr($camera, 0, 4) == substr($make, 0, 4)) {
+      $camera = $camera;
+    } else {
+      $camera = $make.' '.$camera;
+    }
+    #if (!empty($exif['LensModel'])) {
+    #  $lens = $exif['LensModel'];
+    #} else if (!empty($exif['LensInfo'])) {
+    #  $lens = $exif['LensInfo'];
+    #}
+    #if ($lens != '') {
+    #    $lens = ' with '.$lens;
+    #}
+    if (!empty($exif['FNumber'])) {
+      $f = explode('/', $exif['FNumber']);
+      $f = $f[0] / $f[1];
+      $f = ' and f/'.$f;
+    }
+    if (!empty($exif['ExposureTime'])) {
+      $s = $exif['ExposureTime'];
+      if ($s != '') {
+        $s = ', '.$s.'sec';
+      }
+    }
+    if (!empty($exif['FocalLength'])) {
+      $focal = explode('/', $exif['FocalLength']);
+      $focal = round($focal[0] / $focal[1]);
+      $focal = ' at '.$focal.'mm';
+    }
+    if (!empty($exif['ISOSpeedRatings'])) {
+      $iso = $exif['ISOSpeedRatings'];
+      if ($iso != '') {
+        $iso = ', ISO '.$iso;
+      }
+    }
+    #error_log($camera.$lens.$focal.$f.$s.$iso);
+    return $camera.$lens.$focal.$f.$s.$iso;
   }
 
   function add_additional_metadata($meta, $file, $sourceImageType)
@@ -144,6 +206,9 @@ class FSGPlugin {
       }
       if (isset($lat)) {
         $meta['latitude'] = $lat;
+      }
+      if (empty($meta['info'])) {
+        $meta['info'] = $this->camera_info($exif);
       }
     } else {
       error_log('Cannot read exif. exif_read_data not callable.');
@@ -423,10 +488,12 @@ class FSGPlugin {
     }
 
     $links = $this->links($content);
+    #$this->ob_log($links);
 
     // Add needed data to links
     $upload_dir = wp_upload_dir();
     $media = $upload_dir['baseurl'];
+    $fsg_post = array();
     foreach ($links as $link) {
       if (strpos($link, 'data-postid') === false) { // test if link already has the data
         $href = $this->href($link);
@@ -438,19 +505,21 @@ class FSGPlugin {
                 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
                 'include' => $id));
             if (count($photos) > 0) {
-                $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
-                                       'permalink' => get_permalink($id).'#0');
+                $fsg_post[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
+                                         'permalink' => get_permalink($id).'#0');
             }
           }
+        } else if (array_key_exists($href, $images)) {
+          $fsg_post[$href] = $images[$href];
         }
-        if (array_key_exists($href, $images)) {
+        if (array_key_exists($href, $fsg_post)) {
           $tmp = str_replace('<a ', '<a data-postid="fsg_post_'.$post->ID.
-                             '" data-imgid="'.$images[$href]['id'].'" ', $link);
+                             '" data-imgid="'.$fsg_post[$href]['id'].'" ', $link);
           $content = str_replace($link, $tmp, $content);
         }
       }
     }
-    $this->append_json('fsg_post_'.$post->ID, $images);
+    $this->append_json('fsg_post_'.$post->ID, $fsg_post);
     return $content;
   }
 }
