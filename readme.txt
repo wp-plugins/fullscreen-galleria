@@ -78,6 +78,10 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.0 =
+* Settings page added.
+* Fix exposure time.
+
 = 0.6.6 =
 * Fill camera info from exif on upload.
 * Only show images that are linked to image file in carousel.

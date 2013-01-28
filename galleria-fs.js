@@ -85,6 +85,7 @@ show_galleria = function(event) {
       set_keyboard();
     } else {
       // Init galleria
+      
       elem.galleria({
         dataSource: fsg_json[postid],
         show: id,
@@ -93,7 +94,11 @@ show_galleria = function(event) {
         imageCrop: false,
         fullscreenCrop: false,
         maxScaleRatio: 1.0,
-        idleTime: 2000,
+        showInfo: false,
+        idleTime: Math.max(1000, parseInt(fsg_settings['overlay_time'])),
+        thumbnails: fsg_settings['show_thumbnails'],
+        autoplay: fsg_settings['auto_start_slideshow'],
+        transition: fsg_settings['transition'],
         extend: function() {
           set_keyboard();
         }
