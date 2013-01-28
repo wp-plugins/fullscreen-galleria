@@ -26,7 +26,9 @@ $(document).ready(function() { // DOM ready
 
 $(window).resize(function() { // window resized
   var galleria = $("#galleria").data('galleria');
-  galleria.resize();
+  if (galleria != undefined) {
+    galleria.resize();
+  }
 });
 
 set_keyboard = function(event) {
@@ -35,7 +37,7 @@ set_keyboard = function(event) {
     escape: function() {
       if ($('#galleria-map').is(":visible")) {
         $('.galleria-map-close').click();
-      } else {
+      } else if ($('#galleria').is(":visible")) {
         $('.galleria-close').click();
       }
     },
@@ -83,6 +85,7 @@ show_galleria = function(event) {
       set_keyboard();
     } else {
       // Init galleria
+      
       elem.galleria({
         dataSource: fsg_json[postid],
         show: id,
@@ -91,7 +94,11 @@ show_galleria = function(event) {
         imageCrop: false,
         fullscreenCrop: false,
         maxScaleRatio: 1.0,
-        idleTime: 2000,
+        showInfo: false,
+        idleTime: Math.max(1000, parseInt(fsg_settings['overlay_time'])),
+        thumbnails: fsg_settings['show_thumbnails'],
+        autoplay: fsg_settings['auto_start_slideshow'],
+        transition: fsg_settings['transition'],
         extend: function() {
           set_keyboard();
         }
