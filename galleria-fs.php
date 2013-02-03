@@ -4,23 +4,31 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 0.6.1
+Version: 1.1
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '0.6.1';
+$fsg_ver = '1.1';
+
+function fsg_remove_settings() 
+{
+	delete_option($this->db_key);
+}
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
   protected $json = "fsg_json = {\n";
+  protected $options = array();
   protected $gps = FALSE;
   protected $photoboxid = 0;
   protected $groupid = 0;
   protected $firstpostid = -1;
-  protected $used = Array();
+  protected $used = array();
+
+  // Helper functions
 
   function startswith(&$str, &$starts)
   {
@@ -106,6 +114,17 @@ class FSGPlugin {
     return $d + ($m / 60.0) + ($s / 3600.0);
   }
 
+  function ob_log($ob)
+  {
+    ob_start();
+    var_dump($ob);
+    $contents = ob_get_contents();
+    ob_end_clean();
+    error_log($contents);
+  }
+
+  // Plugin construct
+
   public function __construct()
   {
     // run after gallery processed
@@ -114,9 +133,226 @@ class FSGPlugin {
     add_action('wp_footer', array(&$this, 'footer'));
     add_filter('attachment_fields_to_edit', array(&$this, 'fields_to_edit'), 10, 2);
     add_filter('attachment_fields_to_save', array(&$this, 'fields_to_save'), 10, 2);
-    add_filter('wp_read_image_metadata', array(&$this, 'add_additional_metadata'), '', 3);
+    add_filter('wp_read_image_metadata', array(&$this, 'add_additional_metadata'), '', 5);
     add_shortcode('fsg_photobox', array(&$this, 'photobox_shortcode'));
     add_shortcode('fsg_link', array(&$this, 'link_shortcode'));
+    add_action('admin_init', array(&$this, 'admin_init'));
+    add_action('admin_menu', array(&$this, 'admin_menu'));
+    register_uninstall_hook(__FILE__, 'fsg_remove_settings');
+    $plugin = plugin_basename(__FILE__); 
+    add_filter('plugin_action_links_'.$plugin, array(&$this, 'settings_link'));
+    
+    $this->defaults = array(); 
+    foreach ($this->settings as $key => $setting) {
+      $this->defaults[$key] = $this->settings[$key]['default'];
+    }
+    $this->options = get_option($this->db_key, $this->defaults);
+    foreach ($this->settings as $key => $setting) {
+      if (!array_key_exists($key, $this->options)) {
+        $this->options[$key] = $this->settings[$key]['default'];
+      }
+      if ($setting['type'] == 'checkbox') {
+        $this->options[$key] = ($this->options[$key] == 'on') ? true : false;
+      }
+    }
+  }
+
+  // Settings
+  protected $db_key = 'fsg_plugin_settings';
+  protected $settings = array(
+  	'transition' => array(
+      'title' => 'Transition Type', 
+      'type' => 'combobox',
+      'default' => 'slide',
+    	'items' => array('Slide' => 'slide', 'Fade' => 'fade', 'Flash' => 'flash', 'Pulse' => 'pulse', 
+                       'Fade and Slide' => 'fadeslide')
+    ),
+  	'overlay_time' => array(
+      'title' => 'Show Overlay', 
+      'type' => 'combobox',
+      'default' => 2000,
+    	'items' => array('Newer' => 0, '1s' => 1000, '2s' => 2000, '4s' => 4000, '8s' => 8000, 
+                       'Allways' => 1000000)
+    ),
+  	'show_camera_info' => array(
+      'title' => 'Show Camera Info', 
+      'type' => 'checkbox',
+      'default' => 'on'
+    ),
+  	'show_description' => array(
+      'title' => 'Show Description', 
+      'type' => 'checkbox',
+      'default' => 'on'
+    ),
+  	'show_thumbnails' => array(
+      'title' => 'Show Thumbnails', 
+      'type' => 'checkbox',
+      'default' => 'on'
+    ),
+  	'show_permalink' => array(
+      'title' => 'Show Permalink', 
+      'type' => 'checkbox',
+      'default' => 'on'
+    ),
+  	'auto_start_slideshow' => array(
+      'title' => 'Autostart slideshow', 
+      'type' => 'checkbox',
+      'default' => ''
+    )
+  );
+      
+  function admin_init()
+  {
+  	register_setting($this->db_key, $this->db_key, 
+                     array(&$this, 'plugin_settings_validate'));
+  	add_settings_section('main_section', 'Main Settings', NULL, __FILE__);
+    foreach ($this->settings as $key => $setting) {
+      add_settings_field($key, $setting['title'], array(&$this, $setting['type']), 
+                         __FILE__, 'main_section', $key);
+    }
+  }
+
+  function admin_menu() 
+  {
+  	add_options_page('Fullscreen Galleria Settings', 'Fullscreen Galleria', 
+                     'administrator', __FILE__, array(&$this, 'settings_page'));
+  }
+  
+  function settings_page() 
+  {
+    global $fsg_ver;
+  ?>
+  	<div class="wrap">
+  		<div class="icon32" id="icon-options-general"><br></div>
+  		<h2>Fullscreen Galleria Settings</h2>
+  		<form action="options.php" method="post">
+  		<?php settings_fields($this->db_key); ?>
+  		<?php do_settings_sections(__FILE__); ?>
+  		<p class="submit">
+  			<input name="submit" type="submit" id="submit" class="button-primary" 
+               value="<?php esc_attr_e('Save Changes'); ?>" />
+  		</p>
+  		</form>
+      <div style="text-align: center; width: 256px; line-height: 175%;">
+        
+      <img width=256 height=28 src="<?php echo plugins_url('hr.png', __FILE__); ?>"><br>
+      Version <?php echo $fsg_ver; ?><br>
+      <div style="font-size: 12pt;">
+      <a href="mailto:petri.damsten@torturedmind.org">Petri Damstén</a><br>
+      <a href="http://torturedmind.org/">Tortured Mind Photography</a>
+    	</div>
+    	</div>
+  	</div>
+  <?php
+  }
+
+  function plugin_settings_validate($input) 
+  {
+  	return $input;
+  }
+
+  function combobox($key) 
+  {
+  	$options = get_option($this->db_key, $this->defaults);
+  	$items = $this->settings[$key]['items'];
+  	echo '<select id="'.$key.'" name="'.$this->db_key.'['.$key.']">';
+  	foreach ($items as $k => $item) {
+  		$selected = ($options[$key] == $item) ? 'selected="selected"' : '';
+  		echo '<option value="'.$item.'" '.$selected.'>'.$k.'</option>';
+  	}
+  	echo '</select>';
+  }
+
+  function checkbox($key) 
+  {
+  	$options = get_option($this->db_key, $this->defaults);
+  	if ($options[$key] == 'on') { 
+      $checked = ' checked="checked" '; 
+    } else {
+      $checked = '';
+    }
+  	echo '<input '.$checked.' id="'.$key.'" name="'.$this->db_key.'['.$key.']" type="checkbox" />';
+  }
+
+  function settings_link($links) 
+  { 
+    $settings_link = '<a href="options-general.php?page=fullscreen-galleria/galleria-fs.php">'.
+                     'Settings</a>'; 
+    array_unshift($links, $settings_link); 
+    return $links; 
+  }
+
+  // Rest of the plugin
+
+  function exifv($s)
+  {
+    $e = explode('/', $s);
+    if (count($e) < 2 ) {
+      $b = 1;
+    } else {
+      $b = intval($e[1]);
+    }
+    $a = intval($e[0]);
+    $a = ($a == 0) ? 1: $a;
+    $b = ($b == 0) ? 1: $b;
+    return array($a, $b);
+  }
+  
+  function camera_info($exif)
+  {
+    $camera = '';
+    $lens = '';
+    $focal = '';
+    $f = '';
+    $s = '';
+    $iso = '';
+    if (!empty($exif['Model'])) {
+      $camera = $exif['Model'];
+    }
+    if (!empty($exif['Make'])) {
+      $make = $exif['Make'];
+    }
+    if (substr($camera, 0, 4) == substr($make, 0, 4)) {
+      $camera = $camera;
+    } else {
+      $camera = $make.' '.$camera;
+    }
+    #if (!empty($exif['LensModel'])) {
+    #  $lens = $exif['LensModel'];
+    #} else if (!empty($exif['LensInfo'])) {
+    #  $lens = $exif['LensInfo'];
+    #}
+    #if ($lens != '') {
+    #    $lens = ' with '.$lens;
+    #}
+    if (!empty($exif['FNumber'])) {
+      $f = $this->exifv($exif['FNumber']);
+      $f = $f[0] / $f[1];
+      $f = ' and f/'.$f;
+    }
+    if (!empty($exif['ExposureTime'])) {
+      $s = $this->exifv($exif['ExposureTime']);
+      if ($s[0] > $s[1]) {
+        $s = $s[0] / $s[1];
+      } else {
+        $s = $s[1] / $s[0];
+        $s = '1/'.$s;
+      }
+      $s = ', '.$s.'sec';
+    }
+    if (!empty($exif['FocalLength'])) {
+      $focal = $this->exifv($exif['FocalLength']);
+      $focal = round($focal[0] / $focal[1]);
+      $focal = ' at '.$focal.'mm';
+    }
+    if (!empty($exif['ISOSpeedRatings'])) {
+      $iso = $exif['ISOSpeedRatings'];
+      if ($iso != '') {
+        $iso = ', ISO '.$iso;
+      }
+    }
+    #error_log($camera.$lens.$focal.$f.$s.$iso);
+    return $camera.$lens.$focal.$f.$s.$iso;
   }
 
   function add_additional_metadata($meta, $file, $sourceImageType)
@@ -145,6 +381,9 @@ class FSGPlugin {
       if (isset($lat)) {
         $meta['latitude'] = $lat;
       }
+      if (empty($meta['info'])) {
+        $meta['info'] = $this->camera_info($exif);
+      }
     } else {
       error_log('Cannot read exif. exif_read_data not callable.');
     }
@@ -159,6 +398,8 @@ class FSGPlugin {
       'rows'       => 2,
       'cols'       => 3,
       'border'     => 2,
+      'maxtiles'   => 20,
+      'tile'       => 0,
       'include'    => '',
     ), $attr));
 
@@ -178,7 +419,8 @@ class FSGPlugin {
                 'permalink' => get_permalink($val->ID).'#0');
     }
     $id = 'fsg_photobox_'.$this->photoboxid;
-    $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".$border."},\n";
+    $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".
+                       $border.", maxtiles: ".$maxtiles.", tile: ".$tile."},\n";
     $this->append_json($id, $images, true);
     ++$this->photoboxid;
     return "<div id='".$id."' class='galleria-photobox'></div>";
@@ -282,8 +524,8 @@ class FSGPlugin {
   function enqueue_scripts()
   {
     global $fsg_ver;
-    wp_enqueue_script('galleria', plugins_url('galleria-1.2.8.min.js', __FILE__), array('jquery'), '1.2.8', true);
-    //wp_enqueue_script('galleria', plugins_url('galleria.js', __FILE__), array('jquery'), '1.2.8', true);
+    wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.min.js', __FILE__), array('jquery'), '1.2.9', true);
+    //wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.js', __FILE__), array('jquery'), '1.2.9', true);
     wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, true);
     // register here and print conditionally in footer
     wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.11', true);
@@ -298,14 +540,15 @@ class FSGPlugin {
     wp_print_scripts(($this->gps) ? 'open-layers' : '');
     if (!empty($this->json)) {
       $this->json = rtrim($this->json, ",\n");
-      $this->json .= "\n};";
+      $this->json .= "\n};\n";
       $this->photobox = rtrim($this->photobox, ",\n");
       $this->photobox .= "\n};\n";
       $theme = plugins_url('galleria-fs-theme.js', __FILE__);
       $url = "fullscreen_galleria_url='".plugin_dir_url(__FILE__)."';\n";
+    	$options = 'fsg_settings = '.json_encode($this->options).";\n";
       $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
       echo "<div id=\"galleria\"></div><script>Galleria.loadTheme(\"".$theme."\");\n".
-           $url.$postid.$this->photobox.$this->json."</script>";
+           $url.$postid.$options.$this->photobox.$this->json."</script>";
     }
   }
 
@@ -327,62 +570,71 @@ class FSGPlugin {
         $meta = wp_get_attachment_metadata($val['post_id']);
         $thumb = wp_get_attachment_image_src($val['post_id'], 'thumbnail');
         $thumb = $thumb[0];
-        $title = addslashes($val['data']->post_title);
-        //var_dump($val['data']);
-        $description = $val['data']->post_content;
-        if (!empty($description)) {
-          $description = addslashes($description);
-          $description = str_replace("\n", "<br/>", $description);
-          $description = str_replace("\r", "", $description);
-          $description = "<p class=\"galleria-info-description\">".$description."</p>";
-        }
-        if (!empty($meta['image_meta']['link'])) {
-          $link = $meta['image_meta']['link'];
-          if (strpos($link, 'flickr.com') != FALSE) {
-            $t = 'Show in Flickr';
-            $c = 'galleria-link-flickr';
+        $bookmark = '';
+        $layer = '';
+        if ($this->options['overlay_time'] != 0) {
+          $title = addslashes($val['data']->post_title);
+          //var_dump($val['data']);
+          $desc = $val['data']->post_content;
+          if ($this->options['show_description'] && !empty($desc)) {
+            $description = addslashes($desc);
+            $description = str_replace("\n", "<br/>", $description);
+            $description = str_replace("\r", "", $description);
+            $description = "<p class=\"galleria-info-description\">".$description."</p>";
           } else {
-            $t = $link;
-            $c = 'galleria-link';
+            $description = '';
           }
-          $link = "<div class=\"galleria-layeritem\">".
-                      "<a target=\"_blank\" title=\"".$t."\" href=\"".$link."\">".
-                      "<div class=\"".$c."\"></div></a>".
-                  "</div>";
-        } else {
-          $link = '';
+          if (!empty($meta['image_meta']['link'])) {
+            $link = $meta['image_meta']['link'];
+            if (strpos($link, 'flickr.com') != FALSE) {
+              $t = 'Show in Flickr';
+              $c = 'galleria-link-flickr';
+            } else {
+              $t = $link;
+              $c = 'galleria-link';
+            }
+            $link = "<div class=\"galleria-layeritem\">".
+                        "<a target=\"_blank\" title=\"".$t."\" href=\"".$link."\">".
+                        "<div class=\"".$c."\"></div></a>".
+                    "</div>";
+          } else {
+            $link = '';
+          }
+          if (!empty($meta['image_meta']['longitude'])) {
+            $c = $meta['image_meta']['latitude'].",".$meta['image_meta']['longitude'];
+            $map = "<div class=\"galleria-layeritem\">".
+                        "<a id=\"fsg_map_btn\" title=\"Open Map\"".
+                        " href=\"#\" onclick=\"open_map(".$c.");\">".
+                        "<div class=\"galleria-link-map\"></div></a>".
+                    "</div>";
+            $this->gps = TRUE;
+          } else {
+            $map = '';
+          }
+          $permalink = $val['permalink'];
+          if ($this->options['show_permalink'] && !empty($permalink)) {
+            $bookmark = "<div class=\"galleria-layeritem\">".
+                        "<a title=\"Permalink\" href=\"".$permalink."\">".
+                        "<div class=\"galleria-link-bookmark\"></div></a>".
+                    "</div>";
+          } else {
+            $bookmark = '';
+          }
+          if ($this->options['show_camera_info'] && !empty($meta['image_meta']['info'])) {
+            $info = "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
+          } else {
+            $info = '';
+          }
+          $info = addslashes($info);
+          $layer = '<div class="galleria-infolayer"><div class="galleria-layeritem">'.
+                   '<h1>'.$title.'</h1>'.$description.$info.
+                   '</div>'.$link.$map.$bookmark.'</div>';
         }
-        if (!empty($meta['image_meta']['longitude'])) {
-          $c = $meta['image_meta']['latitude'].",".$meta['image_meta']['longitude'];
-          $map = "<div class=\"galleria-layeritem\">".
-                      "<a id=\"fsg_map_btn\" title=\"Open Map\"".
-                      " href=\"#\" onclick=\"open_map(".$c.");\">".
-                      "<div class=\"galleria-link-map\"></div></a>".
-                  "</div>";
-          $this->gps = TRUE;
-        } else {
-          $map = '';
-        }
-        $permalink = $val['permalink'];
-        if (!empty($permalink)) {
-          $bookmark = "<div class=\"galleria-layeritem\">".
-                      "<a title=\"Permalink\" href=\"".$permalink."\">".
-                      "<div class=\"galleria-link-bookmark\"></div></a>".
-                  "</div>";
-        } else {
-          $bookmark = '';
-        }
-        $info = (empty($meta['image_meta']['info'])) ? '' :
-                "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
-        $info = addslashes($info);
         $this->json .= "{id: ".$val['post_id'].
-                      ", image: '".$key.
-                      "', thumb: '".$thumb.
-                      "', permalink: '".$permalink.
-                      "', layer: '<div class=\"galleria-infolayer\">".
-                          "<div class=\"galleria-layeritem\">".
-                              "<h1>".$title."</h1>".$description.$info.
-                          "</div>".$link.$map.$bookmark."</div>'";
+                       ", image: '".$key.
+                       "', thumb: '".$thumb.
+                       "', permalink: '".$bookmark.
+                       "', layer: '".$layer."'";
         if ($extra) {
           foreach (array("thumbnail", "medium", "large", "full") as $size) {
             $img = wp_get_attachment_image_src($val['post_id'], $size);
@@ -423,10 +675,12 @@ class FSGPlugin {
     }
 
     $links = $this->links($content);
+    #$this->ob_log($links);
 
     // Add needed data to links
     $upload_dir = wp_upload_dir();
     $media = $upload_dir['baseurl'];
+    $fsg_post = array();
     foreach ($links as $link) {
       if (strpos($link, 'data-postid') === false) { // test if link already has the data
         $href = $this->href($link);
@@ -437,18 +691,22 @@ class FSGPlugin {
             $photos = &get_posts(array('post_type' => 'attachment',
                 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
                 'include' => $id));
-            $images[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
-                                   'permalink' => get_permalink($id).'#0');
+            if (count($photos) > 0) {
+                $fsg_post[$href] = array('post_id' => $id, 'id' => $id, 'data' => $photos[0],
+                                         'permalink' => get_permalink($id).'#0');
+            }
           }
+        } else if (array_key_exists($href, $images)) {
+          $fsg_post[$href] = $images[$href];
         }
-        if (array_key_exists($href, $images)) {
+        if (array_key_exists($href, $fsg_post)) {
           $tmp = str_replace('<a ', '<a data-postid="fsg_post_'.$post->ID.
-                             '" data-imgid="'.$images[$href]['id'].'" ', $link);
+                             '" data-imgid="'.$fsg_post[$href]['id'].'" ', $link);
           $content = str_replace($link, $tmp, $content);
         }
       }
     }
-    $this->append_json('fsg_post_'.$post->ID, $images);
+    $this->append_json('fsg_post_'.$post->ID, $fsg_post);
     return $content;
   }
 }
