@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.0
+Version: 1.1
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.0';
+$fsg_ver = '1.1';
 
 function fsg_remove_settings() 
 {
@@ -138,15 +138,18 @@ class FSGPlugin {
     add_shortcode('fsg_link', array(&$this, 'link_shortcode'));
     add_action('admin_init', array(&$this, 'admin_init'));
     add_action('admin_menu', array(&$this, 'admin_menu'));
-    register_activation_hook(__FILE__, array(&$this, 'add_setting_defaults'));
     register_uninstall_hook(__FILE__, 'fsg_remove_settings');
     $plugin = plugin_basename(__FILE__); 
     add_filter('plugin_action_links_'.$plugin, array(&$this, 'settings_link'));
     
-    $this->options = get_option($this->db_key);
+    $this->defaults = array(); 
+    foreach ($this->settings as $key => $setting) {
+      $this->defaults[$key] = $this->settings[$key]['default'];
+    }
+    $this->options = get_option($this->db_key, $this->defaults);
     foreach ($this->settings as $key => $setting) {
       if (!array_key_exists($key, $this->options)) {
-        $this->options[$key] = '';
+        $this->options[$key] = $this->settings[$key]['default'];
       }
       if ($setting['type'] == 'checkbox') {
         $this->options[$key] = ($this->options[$key] == 'on') ? true : false;
@@ -230,12 +233,12 @@ class FSGPlugin {
                value="<?php esc_attr_e('Save Changes'); ?>" />
   		</p>
   		</form>
-      <div style="text-align: center; width: 235px; line-height: 175%;">
+      <div style="text-align: center; width: 256px; line-height: 175%;">
         
-      <img width=235 height=31 src="<?php echo plugins_url('hr.png', __FILE__); ?>"><br>
+      <img width=256 height=28 src="<?php echo plugins_url('hr.png', __FILE__); ?>"><br>
       Version <?php echo $fsg_ver; ?><br>
       <div style="font-size: 12pt;">
-      Petri Damstén<br>
+      <a href="mailto:petri.damsten@torturedmind.org">Petri Damstén</a><br>
       <a href="http://torturedmind.org/">Tortured Mind Photography</a>
     	</div>
     	</div>
@@ -250,7 +253,7 @@ class FSGPlugin {
 
   function combobox($key) 
   {
-  	$options = get_option($this->db_key);
+  	$options = get_option($this->db_key, $this->defaults);
   	$items = $this->settings[$key]['items'];
   	echo '<select id="'.$key.'" name="'.$this->db_key.'['.$key.']">';
   	foreach ($items as $k => $item) {
@@ -262,7 +265,7 @@ class FSGPlugin {
 
   function checkbox($key) 
   {
-  	$options = get_option($this->db_key);
+  	$options = get_option($this->db_key, $this->defaults);
   	if ($options[$key] == 'on') { 
       $checked = ' checked="checked" '; 
     } else {
@@ -271,17 +274,6 @@ class FSGPlugin {
   	echo '<input '.$checked.' id="'.$key.'" name="'.$this->db_key.'['.$key.']" type="checkbox" />';
   }
 
-  function add_setting_defaults() 
-  {
-  	$options = get_option($this->db_key);
-  	foreach ($this->settings as $key => $setting) {
-      if (!array_key_exists($key, $options)) {
-        $options[$key] = $setting['default'];
-      }
-  	}
-		update_option($this->db_key, $options);
-  }
-  
   function settings_link($links) 
   { 
     $settings_link = '<a href="options-general.php?page=fullscreen-galleria/galleria-fs.php">'.
@@ -406,6 +398,8 @@ class FSGPlugin {
       'rows'       => 2,
       'cols'       => 3,
       'border'     => 2,
+      'maxtiles'   => 20,
+      'tile'       => 0,
       'include'    => '',
     ), $attr));
 
@@ -425,7 +419,8 @@ class FSGPlugin {
                 'permalink' => get_permalink($val->ID).'#0');
     }
     $id = 'fsg_photobox_'.$this->photoboxid;
-    $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".$border."},\n";
+    $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".
+                       $border.", maxtiles: ".$maxtiles.", tile: ".$tile."},\n";
     $this->append_json($id, $images, true);
     ++$this->photoboxid;
     return "<div id='".$id."' class='galleria-photobox'></div>";
@@ -575,6 +570,8 @@ class FSGPlugin {
         $meta = wp_get_attachment_metadata($val['post_id']);
         $thumb = wp_get_attachment_image_src($val['post_id'], 'thumbnail');
         $thumb = $thumb[0];
+        $bookmark = '';
+        $layer = '';
         if ($this->options['overlay_time'] != 0) {
           $title = addslashes($val['data']->post_title);
           //var_dump($val['data']);
@@ -632,13 +629,11 @@ class FSGPlugin {
           $layer = '<div class="galleria-infolayer"><div class="galleria-layeritem">'.
                    '<h1>'.$title.'</h1>'.$description.$info.
                    '</div>'.$link.$map.$bookmark.'</div>';
-        } else {
-          $layer = '';
         }
         $this->json .= "{id: ".$val['post_id'].
                        ", image: '".$key.
                        "', thumb: '".$thumb.
-                       "', permalink: '".$permalink.
+                       "', permalink: '".$bookmark.
                        "', layer: '".$layer."'";
         if ($extra) {
           foreach (array("thumbnail", "medium", "large", "full") as $size) {

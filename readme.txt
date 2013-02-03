@@ -51,8 +51,10 @@ Adds random photobox to the page. eg. [fsg_photobox include="244, 243,242,241,20
 
 * **include** - specify list of images (default is all images attached to post/page)
 * **rows** - maximum number of rows in the grid (default is 2)
-* **cols** - maximum number of columns in the grid (default is 2)
+* **cols** - maximum number of columns in the grid (default is 3)
 * **border** - border around the pictures in pixels (default is 2)
+* **maxtiles** - biggest allowed picture in tiles (default is 20)
+* **tile** - fill available space with x px tiles. rows and cols are ignored. (no default)
 
 = fsg_link keyword =
 
@@ -77,6 +79,10 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+
+= 1.1 =
+* maxtiles and tile options added to photobox.
+* Fix settings interface
 
 = 1.0 =
 * Settings page added.
