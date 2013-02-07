@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.1
+Version: 1.1.1
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.1';
+$fsg_ver = '1.1.1';
 
 function fsg_remove_settings() 
 {
@@ -147,9 +147,11 @@ class FSGPlugin {
       $this->defaults[$key] = $this->settings[$key]['default'];
     }
     $this->options = get_option($this->db_key, $this->defaults);
+    //$this->ob_log($this->options);
+    //$this->ob_log($this->defaults);
     foreach ($this->settings as $key => $setting) {
       if (!array_key_exists($key, $this->options)) {
-        $this->options[$key] = $this->settings[$key]['default'];
+        $this->options[$key] = "";
       }
       if ($setting['type'] == 'checkbox') {
         $this->options[$key] = ($this->options[$key] == 'on') ? true : false;
@@ -171,7 +173,7 @@ class FSGPlugin {
       'title' => 'Show Overlay', 
       'type' => 'combobox',
       'default' => 2000,
-    	'items' => array('Newer' => 0, '1s' => 1000, '2s' => 2000, '4s' => 4000, '8s' => 8000, 
+    	'items' => array('Never' => 0, '1s' => 1000, '2s' => 2000, '4s' => 4000, '8s' => 8000, 
                        'Allways' => 1000000)
     ),
   	'show_camera_info' => array(
