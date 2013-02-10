@@ -80,6 +80,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.1.2 =
+* fix uninstall.
+
 = 1.1.1 =
 * fix settings again.
 

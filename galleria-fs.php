@@ -4,18 +4,20 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.1.1
+Version: 1.1.2
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.1.1';
+$fsg_ver = '1.1.2';
+$fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
 {
-	delete_option($this->db_key);
+  global $fsg_db_key;
+	delete_option($fsg_db_key);
 }
 
 class FSGPlugin {
@@ -127,6 +129,7 @@ class FSGPlugin {
 
   public function __construct()
   {
+    global $fsg_db_key;
     // run after gallery processed
     add_filter('the_content', array(&$this, 'content'), 99);
     add_action('wp_enqueue_scripts', array(&$this, 'enqueue_scripts'));
@@ -146,7 +149,7 @@ class FSGPlugin {
     foreach ($this->settings as $key => $setting) {
       $this->defaults[$key] = $this->settings[$key]['default'];
     }
-    $this->options = get_option($this->db_key, $this->defaults);
+    $this->options = get_option($fsg_db_key, $this->defaults);
     //$this->ob_log($this->options);
     //$this->ob_log($this->defaults);
     foreach ($this->settings as $key => $setting) {
@@ -160,7 +163,6 @@ class FSGPlugin {
   }
 
   // Settings
-  protected $db_key = 'fsg_plugin_settings';
   protected $settings = array(
   	'transition' => array(
       'title' => 'Transition Type', 
@@ -205,7 +207,8 @@ class FSGPlugin {
       
   function admin_init()
   {
-  	register_setting($this->db_key, $this->db_key, 
+    global $fsg_db_key;
+  	register_setting($fsg_db_key, $fsg_db_key, 
                      array(&$this, 'plugin_settings_validate'));
   	add_settings_section('main_section', 'Main Settings', NULL, __FILE__);
     foreach ($this->settings as $key => $setting) {
@@ -223,12 +226,13 @@ class FSGPlugin {
   function settings_page() 
   {
     global $fsg_ver;
+    global $fsg_db_key;
   ?>
   	<div class="wrap">
   		<div class="icon32" id="icon-options-general"><br></div>
   		<h2>Fullscreen Galleria Settings</h2>
   		<form action="options.php" method="post">
-  		<?php settings_fields($this->db_key); ?>
+  		<?php settings_fields($fsg_db_key); ?>
   		<?php do_settings_sections(__FILE__); ?>
   		<p class="submit">
   			<input name="submit" type="submit" id="submit" class="button-primary" 
@@ -255,9 +259,10 @@ class FSGPlugin {
 
   function combobox($key) 
   {
-  	$options = get_option($this->db_key, $this->defaults);
+    global $fsg_db_key;
+  	$options = get_option($fsg_db_key, $this->defaults);
   	$items = $this->settings[$key]['items'];
-  	echo '<select id="'.$key.'" name="'.$this->db_key.'['.$key.']">';
+  	echo '<select id="'.$key.'" name="'.$fsg_db_key.'['.$key.']">';
   	foreach ($items as $k => $item) {
   		$selected = ($options[$key] == $item) ? 'selected="selected"' : '';
   		echo '<option value="'.$item.'" '.$selected.'>'.$k.'</option>';
@@ -267,13 +272,14 @@ class FSGPlugin {
 
   function checkbox($key) 
   {
-  	$options = get_option($this->db_key, $this->defaults);
-  	if ($options[$key] == 'on') { 
+    global $fsg_db_key;
+  	$options = get_option($fsg_db_key, $this->defaults);
+  	if (array_key_exists($key, $options) && $options[$key] == 'on') { 
       $checked = ' checked="checked" '; 
     } else {
       $checked = '';
     }
-  	echo '<input '.$checked.' id="'.$key.'" name="'.$this->db_key.'['.$key.']" type="checkbox" />';
+  	echo '<input '.$checked.' id="'.$key.'" name="'.$fsg_db_key.'['.$key.']" type="checkbox" />';
   }
 
   function settings_link($links) 
