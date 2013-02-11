@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.1.2
+Version: 1.1.3
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.1.2';
+$fsg_ver = '1.1.3';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -449,11 +449,17 @@ class FSGPlugin {
           'include' => $include));
       $id = "fsg_group_".$this->groupid;
       ++$this->groupid;
+      $imgid = 0;
     } else {
       $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
           'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
           'orderby' => 'menu_order ID'));
       $id = "fsg_post_".$post->ID;
+      if (!empty($photos)) {
+        $imgid = array_shift(array_values($photos))->ID;
+      } else {
+        $imgid = 0;
+      }
     }
     $images = array();
     foreach ($photos as $key => $val) {
@@ -470,7 +476,8 @@ class FSGPlugin {
     if (!empty($class)) {
       $class = " class='".$class."'";
     }
-    return "<a data-postid='".$id."' data-imgid='0' href='".$first."'".$class.">".$content."</a>";
+    return "<a data-postid='".$id."' data-imgid='".$imgid."' href='".$first."'".
+           $class.">".$content."</a>";
   }
 
   function fields_to_edit($form_fields, $post)
