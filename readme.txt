@@ -80,6 +80,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.1.4 =
+* fixing fsg_link again.
+
 = 1.1.3 =
 * fix fsg_link when there is no include.
 

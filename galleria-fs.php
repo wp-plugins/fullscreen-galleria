@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.1.3
+Version: 1.1.4
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.1.3';
+$fsg_ver = '1.1.4';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -467,8 +467,8 @@ class FSGPlugin {
           array('post_id' => $val->ID, 'id' => 0, 'data' => $val,
                 'permalink' => get_permalink($val->ID).'#0');
     }
+    $this->append_json($id, $images);
     if (!empty($include)) {
-      $this->append_json($id, $images);
       $this->used = array_merge($this->used, wp_parse_id_list($include));
     }
     reset($images);
@@ -579,6 +579,9 @@ class FSGPlugin {
   function append_json($id, &$images, $extra = false)
   {
     // Write json data for galleria
+    if (empty($images)) {
+      return;
+    }
     $this->json .= $id.": [\n";
     foreach ($images as $key => $val) {
       if (!in_array($val['post_id'], $this->used)) {
