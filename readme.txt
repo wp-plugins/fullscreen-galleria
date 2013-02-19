@@ -5,7 +5,7 @@ Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
 Requires at least: 3.3
-Tested up to: 3.4.2
+Tested up to: 3.5.1
 Stable tag: trunk
 License: MIT
 
@@ -51,8 +51,10 @@ Adds random photobox to the page. eg. [fsg_photobox include="244, 243,242,241,20
 
 * **include** - specify list of images (default is all images attached to post/page)
 * **rows** - maximum number of rows in the grid (default is 2)
-* **cols** - maximum number of columns in the grid (default is 2)
+* **cols** - maximum number of columns in the grid (default is 3)
 * **border** - border around the pictures in pixels (default is 2)
+* **maxtiles** - biggest allowed picture in tiles (default is 20)
+* **tile** - fill available space with x px tiles. rows and cols are ignored. (no default)
 
 = fsg_link keyword =
 
@@ -77,6 +79,42 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+
+= 1.1.4 =
+* fixing fsg_link again.
+
+= 1.1.3 =
+* fix fsg_link when there is no include.
+
+= 1.1.2 =
+* fix uninstall.
+
+= 1.1.1 =
+* fix settings again.
+
+= 1.1 =
+* maxtiles and tile options added to photobox.
+* Fix settings interface
+
+= 1.0 =
+* Settings page added.
+* Fix exposure time.
+
+= 0.6.6 =
+* Fill camera info from exif on upload.
+* Only show images that are linked to image file in carousel.
+
+= 0.6.5 =
+* Updated [Galleria](http://galleria.io/) to 1.2.9
+
+= 0.6.4 =
+* Fix ESC key. Patch from Vala.
+
+= 0.6.3 =
+* Check that javascript value is valid. Removes error in console.
+
+= 0.6.2 =
+* Fixing PDF loading, again.
 
 = 0.6.1 =
 * Check if external attachment really exists. Fixes PDF attachments.
