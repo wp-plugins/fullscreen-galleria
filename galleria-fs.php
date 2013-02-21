@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.1.4
+Version: 1.2
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.1.4';
+$fsg_ver = '1.2';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -45,10 +45,12 @@ class FSGPlugin {
   function get_attachment_id_from_src($src) 
   {
 		global $wpdb;
-    if (WP_DEBUG) {
+		$id = $wpdb->get_var("SELECT ID FROM {$wpdb->posts} WHERE guid='$src'");
+    if ($id == NULL && WP_DEBUG) {
       $src = str_replace(".localhost", ".org", $src);
+  		$id = $wpdb->get_var("SELECT ID FROM {$wpdb->posts} WHERE guid='$src'");
     }
-		return $wpdb->get_var("SELECT ID FROM {$wpdb->posts} WHERE guid='$src'");
+    return $id;
   }
 
   function tagarg(&$tag, $arg)
@@ -178,13 +180,23 @@ class FSGPlugin {
     	'items' => array('Never' => 0, '1s' => 1000, '2s' => 2000, '4s' => 4000, '8s' => 8000, 
                        'Allways' => 1000000)
     ),
-  	'show_camera_info' => array(
-      'title' => 'Show Camera Info', 
+  	'show_title' => array(
+      'title' => 'Show Title', 
       'type' => 'checkbox',
       'default' => 'on'
     ),
+  	'show_caption' => array(
+      'title' => 'Show Caption', 
+      'type' => 'checkbox',
+      'default' => ''
+    ),
   	'show_description' => array(
       'title' => 'Show Description', 
+      'type' => 'checkbox',
+      'default' => 'on'
+    ),
+  	'show_camera_info' => array(
+      'title' => 'Show Camera Info', 
       'type' => 'checkbox',
       'default' => 'on'
     ),
@@ -200,6 +212,11 @@ class FSGPlugin {
     ),
   	'auto_start_slideshow' => array(
       'title' => 'Autostart slideshow', 
+      'type' => 'checkbox',
+      'default' => ''
+    ),
+  	'true_fullscreen' => array(
+      'title' => 'True fullscreen (experimental)', 
       'type' => 'checkbox',
       'default' => ''
     )
@@ -591,16 +608,29 @@ class FSGPlugin {
         $bookmark = '';
         $layer = '';
         if ($this->options['overlay_time'] != 0) {
-          $title = addslashes($val['data']->post_title);
-          //var_dump($val['data']);
-          $desc = $val['data']->post_content;
-          if ($this->options['show_description'] && !empty($desc)) {
-            $description = addslashes($desc);
+          if ($this->options['show_title'] && !empty($val['data']->post_title)) {
+            $title = '<h1>'.addslashes($val['data']->post_title).'</h1>';
+          } else {
+            $title = '';
+          }
+          if ($this->options['show_caption'] && !empty($val['data']->post_excerpt)) {
+            $caption = '<h1>'.addslashes($val['data']->post_excerpt).'</h1>';
+          } else {
+            $caption = '';
+          }
+          if ($this->options['show_description'] && !empty($val['data']->post_content)) {
+            $description = addslashes($val['data']->post_content);
             $description = str_replace("\n", "<br/>", $description);
             $description = str_replace("\r", "", $description);
             $description = "<p class=\"galleria-info-description\">".$description."</p>";
           } else {
             $description = '';
+          }
+          if ($this->options['show_camera_info'] && !empty($meta['image_meta']['info'])) {
+            $info = "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
+            $info = addslashes($info);
+          } else {
+            $info = '';
           }
           if (!empty($meta['image_meta']['link'])) {
             $link = $meta['image_meta']['link'];
@@ -629,23 +659,16 @@ class FSGPlugin {
           } else {
             $map = '';
           }
-          $permalink = $val['permalink'];
-          if ($this->options['show_permalink'] && !empty($permalink)) {
+          if ($this->options['show_permalink'] && !empty($val['permalink'])) {
             $bookmark = "<div class=\"galleria-layeritem\">".
-                        "<a title=\"Permalink\" href=\"".$permalink."\">".
+                        "<a title=\"Permalink\" href=\"".$val['permalink']."\">".
                         "<div class=\"galleria-link-bookmark\"></div></a>".
                     "</div>";
           } else {
             $bookmark = '';
           }
-          if ($this->options['show_camera_info'] && !empty($meta['image_meta']['info'])) {
-            $info = "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
-          } else {
-            $info = '';
-          }
-          $info = addslashes($info);
           $layer = '<div class="galleria-infolayer"><div class="galleria-layeritem">'.
-                   '<h1>'.$title.'</h1>'.$description.$info.
+                   $title.$caption.$description.$info.
                    '</div>'.$link.$map.$bookmark.'</div>';
         }
         $this->json .= "{id: ".$val['post_id'].

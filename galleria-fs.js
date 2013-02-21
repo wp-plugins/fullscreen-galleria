@@ -10,7 +10,7 @@ var fsg_last_post_id = "";
 
 $(document).ready(function() { // DOM ready
   $("[data-imgid]", this).each(function() {
-    $(this).click(show_galleria);
+    $(this).click(fsg_show_galleria);
   });
   if($(".galleria-photobox").length != 0) {
     randomize_photos();
@@ -31,7 +31,7 @@ $(window).resize(function() { // window resized
   }
 });
 
-set_keyboard = function(event) {
+fsg_set_keyboard = function(event) {
   var galleria = $("#galleria").data('galleria');
   galleria.attachKeyboard({
     escape: function() {
@@ -53,14 +53,36 @@ set_keyboard = function(event) {
     77: function() { // M = Open map
       $('#fsg_map_btn').click();
     },
-    70: function() { // M = Open map
+    70: function() { // F = Fullscreen
       galleria.toggleFullscreen();
       set_keyboard();
     }
   });
 }
 
-show_galleria = function(event) {
+fsg_on_show = function(event) {
+  var gallery = $("#galleria").data('galleria');
+  
+  if (fsg_settings['true_fullscreen']) {
+    gallery.enterFullscreen();
+  }
+  if (fsg_settings['auto_start_slideshow']) {
+    gallery.play();
+  }
+}
+
+fsg_on_close = function(event) {
+  var gallery = $("#galleria").data('galleria');
+  
+  if (gallery.isFullscreen()) {
+    gallery.exitFullscreen();
+  }
+  if (gallery.isPlaying()) {
+    gallery.pause();
+  }
+}
+
+fsg_show_galleria = function(event) {
   event.preventDefault();
   var elem = $("#galleria");
   var close = $("#close-galleria");
@@ -82,7 +104,8 @@ show_galleria = function(event) {
       // works purely after load
       elem.data('galleria')._options.show = id;
       elem.data('galleria').load(fsg_json[postid]);
-      set_keyboard();
+      fsg_set_keyboard();
+      fsg_on_show();
     } else {
       // Init galleria
       
@@ -99,15 +122,18 @@ show_galleria = function(event) {
         thumbnails: fsg_settings['show_thumbnails'],
         autoplay: fsg_settings['auto_start_slideshow'],
         transition: fsg_settings['transition'],
+        trueFullscreen: fsg_settings['true_fullscreen'],
         extend: function() {
-          set_keyboard();
+          fsg_set_keyboard();
         }
       });
+      fsg_on_show();
     }
     fsg_last_post_id = postid;
   } else {
     elem.data('galleria').show(id);
-    set_keyboard();
+    fsg_set_keyboard();
+    fsg_on_show();
   }
 }
 
@@ -256,7 +282,7 @@ randomize_photos = function()
       var $div = $('<div style="width: ' + size + 'px; height: ' + size + 'px; top: ' + y * BOX +
                   'px; left: ' + x * BOX + 'px; margin: ' + BORDER + 'px;">');
       var $a = $('<a data-postid="' + ID + '" data-imgid="' + imgid + '" href="' + img + '">');
-      $($a).click(show_galleria);
+      $($a).click(fsg_show_galleria);
       // - Find best img
       var a = ["thumbnail", "medium", "large", "full"];
       for (var s in a) {
