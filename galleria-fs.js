@@ -10,7 +10,7 @@ var fsg_last_post_id = "";
 
 $(document).ready(function() { // DOM ready
   $("[data-imgid]", this).each(function() {
-    $(this).click(show_galleria);
+    $(this).click(fsg_show_galleria);
   });
   if($(".galleria-photobox").length != 0) {
     randomize_photos();
@@ -26,16 +26,18 @@ $(document).ready(function() { // DOM ready
 
 $(window).resize(function() { // window resized
   var galleria = $("#galleria").data('galleria');
-  galleria.resize();
+  if (galleria != undefined) {
+    galleria.resize();
+  }
 });
 
-set_keyboard = function(event) {
+fsg_set_keyboard = function(event) {
   var galleria = $("#galleria").data('galleria');
   galleria.attachKeyboard({
     escape: function() {
       if ($('#galleria-map').is(":visible")) {
         $('.galleria-map-close').click();
-      } else {
+      } else if ($('#galleria').is(":visible")) {
         $('.galleria-close').click();
       }
     },
@@ -51,14 +53,36 @@ set_keyboard = function(event) {
     77: function() { // M = Open map
       $('#fsg_map_btn').click();
     },
-    70: function() { // M = Open map
+    70: function() { // F = Fullscreen
       galleria.toggleFullscreen();
       set_keyboard();
     }
   });
 }
 
-show_galleria = function(event) {
+fsg_on_show = function(event) {
+  var gallery = $("#galleria").data('galleria');
+  
+  if (fsg_settings['true_fullscreen']) {
+    gallery.enterFullscreen();
+  }
+  if (fsg_settings['auto_start_slideshow']) {
+    gallery.play();
+  }
+}
+
+fsg_on_close = function(event) {
+  var gallery = $("#galleria").data('galleria');
+  
+  if (gallery.isFullscreen()) {
+    gallery.exitFullscreen();
+  }
+  if (gallery.isPlaying()) {
+    gallery.pause();
+  }
+}
+
+fsg_show_galleria = function(event) {
   event.preventDefault();
   var elem = $("#galleria");
   var close = $("#close-galleria");
@@ -80,9 +104,11 @@ show_galleria = function(event) {
       // works purely after load
       elem.data('galleria')._options.show = id;
       elem.data('galleria').load(fsg_json[postid]);
-      set_keyboard();
+      fsg_set_keyboard();
+      fsg_on_show();
     } else {
       // Init galleria
+      
       elem.galleria({
         dataSource: fsg_json[postid],
         show: id,
@@ -91,16 +117,23 @@ show_galleria = function(event) {
         imageCrop: false,
         fullscreenCrop: false,
         maxScaleRatio: 1.0,
-        idleTime: 2000,
+        showInfo: false,
+        idleTime: Math.max(1000, parseInt(fsg_settings['overlay_time'])),
+        thumbnails: fsg_settings['show_thumbnails'],
+        autoplay: fsg_settings['auto_start_slideshow'],
+        transition: fsg_settings['transition'],
+        trueFullscreen: fsg_settings['true_fullscreen'],
         extend: function() {
-          set_keyboard();
+          fsg_set_keyboard();
         }
       });
+      fsg_on_show();
     }
     fsg_last_post_id = postid;
   } else {
     elem.data('galleria').show(id);
-    set_keyboard();
+    fsg_set_keyboard();
+    fsg_on_show();
   }
 }
 
@@ -144,14 +177,33 @@ randomize_photos = function()
     var BORDER = fsg_photobox[ID]['border'];
     var COLS = fsg_photobox[ID]['cols'];
     var ROWS = fsg_photobox[ID]['rows'];
-    var BOX = $(this).width() / COLS + 1;
-    $(this).width($(this).parent().width() + 2 * BORDER);
-    $(this).height(($(this).parent().width() / COLS * ROWS) + 2 * BORDER);
-    $(this).css('top', -BORDER);
-    $(this).css('left', -BORDER);
-    $(this).html('');
-    //console.log(index, ID, BORDER, 'x', COLS, ROWS, BOX);
+    var MAXTILES = fsg_photobox[ID]['maxtiles'];
+    var TILE = fsg_photobox[ID]['tile'];
+    var x = 0;
+    var y = 0;
+    var BOX = 0;
 
+    if (TILE > 0) {
+      // calc rows and cols
+      BOX = TILE + BORDER;
+      COLS = Math.floor($(this).parent().width() / BOX);
+      ROWS = Math.floor($(this).parent().height() / BOX);
+      $(this).width($(this).parent().width() + BORDER);
+      $(this).height($(this).parent().height() + BORDER);
+      y = Math.floor(($(this).height() - (ROWS * BOX)) / 2);
+    } else {
+      $(this).width($(this).parent().width() + BORDER);
+      var BOX = Math.floor($(this).width() / COLS);
+      $(this).height((BOX * ROWS) + BORDER);
+      y = -BORDER;
+    }
+    x = Math.floor(($(this).width() - (COLS * BOX)) / 2);
+    //console.log(TILE, $(this).width(), $(this).height(), COLS, ROWS, x, y, BOX);
+    $(this).css('top', y);
+    $(this).css('left', x);
+    $(this).html('');
+
+    //console.log(index, ID, BORDER, 'x', COLS, ROWS, BOX, MAXTILES);
     // init array
     var array = new Array(COLS);
     for (var i = 0; i < COLS; i++) {
@@ -160,8 +212,11 @@ randomize_photos = function()
         array[i][j] = 0;
       }
     }
-    var x = 0;
-    var y = 0;
+    for (i = 0; i < fsg_json[ID].length; ++i) {
+      fsg_json[ID][i]['used'] = false;
+    }
+    x = 0;
+    y = 0;
     var d = 1;
     while (1) {
       // next free cell
@@ -190,8 +245,8 @@ randomize_photos = function()
         ++my;
       }
       // mark array
-      var max = Math.min(mx, my);
-      var box = Math.floor(Math.random() * max) + 1;
+      var m = Math.min(mx, my);
+      var box = Math.min(MAXTILES, Math.floor(Math.random() * m) + 1);
       for (var i = 0; i < box; i++) {
         for (var j = 0; j < box; j++) {
           array[x + i][y + j] = d;
@@ -201,6 +256,7 @@ randomize_photos = function()
       var all = true;
       var photo = Math.floor(Math.random() * fsg_json[ID].length);
       for (i = 0; i < fsg_json[ID].length; ++i) {
+        //console.log(photo, fsg_json[ID][photo]['used']);
         if (fsg_json[ID][photo]['used'] != true) {
           fsg_json[ID][photo]['used'] = true;
           all = false;
@@ -217,7 +273,7 @@ randomize_photos = function()
         }
       }
       // Add photo div
-      var size = (box * BOX - 2 * BORDER);
+      var size = Math.floor(box * BOX - 2 * BORDER);
       var img = fsg_json[ID][photo]['image'];
       var imgid = fsg_json[ID][photo]['id'];
       var w = fsg_json[ID][photo]['full'][1];
@@ -226,7 +282,7 @@ randomize_photos = function()
       var $div = $('<div style="width: ' + size + 'px; height: ' + size + 'px; top: ' + y * BOX +
                   'px; left: ' + x * BOX + 'px; margin: ' + BORDER + 'px;">');
       var $a = $('<a data-postid="' + ID + '" data-imgid="' + imgid + '" href="' + img + '">');
-      $($a).click(show_galleria);
+      $($a).click(fsg_show_galleria);
       // - Find best img
       var a = ["thumbnail", "medium", "large", "full"];
       for (var s in a) {
