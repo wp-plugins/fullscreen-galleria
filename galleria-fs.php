@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.2
+Version: 1.2.1
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.2';
+$fsg_ver = '1.2.1';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -29,6 +29,7 @@ class FSGPlugin {
   protected $groupid = 0;
   protected $firstpostid = -1;
   protected $used = array();
+  protected $share_img_url = '';
 
   // Helper functions
 
@@ -139,6 +140,7 @@ class FSGPlugin {
     add_filter('attachment_fields_to_edit', array(&$this, 'fields_to_edit'), 10, 2);
     add_filter('attachment_fields_to_save', array(&$this, 'fields_to_save'), 10, 2);
     add_filter('wp_read_image_metadata', array(&$this, 'add_additional_metadata'), '', 5);
+    //add_filter('sharing_permalink', array(&$this, 'sharing_permalink'), '', 5);
     add_shortcode('fsg_photobox', array(&$this, 'photobox_shortcode'));
     add_shortcode('fsg_link', array(&$this, 'link_shortcode'));
     add_action('admin_init', array(&$this, 'admin_init'));
@@ -209,7 +211,12 @@ class FSGPlugin {
       'title' => 'Show Permalink', 
       'type' => 'checkbox',
       'default' => 'on'
-    ),
+    ),/*
+  	'show_sharing' => array(
+      'title' => 'Show Sharing Buttons (Jetpack needed)', 
+      'type' => 'checkbox',
+      'default' => ''
+    ),*/
   	'auto_start_slideshow' => array(
       'title' => 'Autostart slideshow', 
       'type' => 'checkbox',
@@ -593,6 +600,14 @@ class FSGPlugin {
     return '';
   }
 
+  function sharing_permalink($permalink, $post_id, $share_id)
+  {
+    if ($this->share_img_url != '') {
+      return $this->share_img_url;
+    }
+    return $permalink;
+  }
+  
   function append_json($id, &$images, $extra = false)
   {
     // Write json data for galleria
@@ -667,9 +682,26 @@ class FSGPlugin {
           } else {
             $bookmark = '';
           }
+          $share = ''; // TODO
+          /*
+          # Sharing_Service is a JetPack class and it must be installed for sharing to work.
+          if (class_exists('Sharing_Service') && $this->options['show_sharing']) {
+            $share = '<div><ul>';
+            $sharer = new Sharing_Service();
+      		  $enabled = $sharer->get_blog_services();
+            $this->share_img_url = $val['permalink'];
+    			  foreach ($enabled['visible'] as $id => $service) {
+    				  $share .= '<li class="share-'.$service->get_class().'">'.
+                        $service->get_display(get_post($val['post_id'])).'</li>';
+            }
+            $share .= '</ul></div>';
+            $this->share_img_url = '';
+            //$this->ob_log($share);
+          }
+          */
           $layer = '<div class="galleria-infolayer"><div class="galleria-layeritem">'.
                    $title.$caption.$description.$info.
-                   '</div>'.$link.$map.$bookmark.'</div>';
+                   '</div>'.$link.$map.$bookmark.'</div>'.$share;
         }
         $this->json .= "{id: ".$val['post_id'].
                        ", image: '".$key.
@@ -719,8 +751,9 @@ class FSGPlugin {
     #$this->ob_log($links);
 
     // Add needed data to links
-    $upload_dir = wp_upload_dir();
-    $media = $upload_dir['baseurl'];
+    //$upload_dir = wp_upload_dir();
+    //$media = $upload_dir['baseurl'];
+    $media = site_url();
     $fsg_post = array();
     foreach ($links as $link) {
       if (strpos($link, 'data-postid') === false) { // test if link already has the data

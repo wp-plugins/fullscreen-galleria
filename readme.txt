@@ -80,6 +80,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.2.1 =
+* Trying to fix error where some images show in FSG and some not.
+
 = 1.2 =
 * enable/disable title and caption options
 * True fullscreen option (experimental)
