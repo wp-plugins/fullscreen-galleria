@@ -80,6 +80,10 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.2.3 =
+* Show info also when navigating with keys.
+* Parse string more carefully to avoid errors.
+
 = 1.2.2 =
 * Another try for the same bug.
 

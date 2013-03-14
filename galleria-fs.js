@@ -41,11 +41,26 @@ fsg_set_keyboard = function(event) {
         $('.galleria-close').click();
       }
     },
-    left: galleria.prev,
-    80: galleria.prev, // P = Previous
-    right: galleria.next,
-    space: galleria.next,
-    78: galleria.next, // N = Next
+    left: function() { 
+      galleria.prev();
+      galleria.exitIdleMode();
+    },
+    80: function() { // P = Previous
+      galleria.prev();
+      galleria.exitIdleMode();
+    },
+    right: function() {
+      galleria.next();
+      galleria.exitIdleMode();
+    },
+    space: function() {
+      galleria.next();
+      galleria.exitIdleMode();
+    },
+    78: function() {  // N = Next
+      galleria.next();
+      galleria.exitIdleMode();
+    },
     83: function() { // S = Slideshow
         galleria.setPlaytime(1500);
         galleria.playToggle();
