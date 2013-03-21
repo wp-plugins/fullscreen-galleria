@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.2.3
+Version: 1.2.4
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.2.3';
+$fsg_ver = '1.2.4';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -142,6 +142,7 @@ class FSGPlugin {
     // run after gallery processed
     add_filter('the_content', array(&$this, 'content'), 99);
     add_action('wp_enqueue_scripts', array(&$this, 'enqueue_scripts'));
+    //add_action('wp_head', array(&$this, 'header'));
     add_action('wp_footer', array(&$this, 'footer'));
     add_filter('attachment_fields_to_edit', array(&$this, 'fields_to_edit'), 10, 2);
     add_filter('attachment_fields_to_save', array(&$this, 'fields_to_save'), 10, 2);
@@ -160,6 +161,9 @@ class FSGPlugin {
       $this->defaults[$key] = $this->settings[$key]['default'];
     }
     $this->options = get_option($fsg_db_key, $this->defaults);
+    if (!is_array($this->options)) {
+      $this->options = $this->defaults;
+    }
     //$this->ob_log($this->options);
     //$this->ob_log($this->defaults);
     foreach ($this->settings as $key => $setting) {
@@ -170,6 +174,9 @@ class FSGPlugin {
         $this->options[$key] = ($this->options[$key] == 'on') ? true : false;
       }
     }
+    $this->options['w3tc'] = defined('W3TC');
+    // This is for testing but not removing it yet
+    $this->options['load_in_header'] = false;
   }
 
   // Settings
@@ -569,30 +576,42 @@ class FSGPlugin {
   function enqueue_scripts()
   {
     global $fsg_ver;
-    wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.min.js', __FILE__), array('jquery'), '1.2.9', true);
-    //wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.js', __FILE__), array('jquery'), '1.2.9', true);
-    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, true);
-    // register here and print conditionally in footer
-    wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.11', true);
+    $in_footer = !$this->options['load_in_header'];
+
+    wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.min.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
+    //wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
+    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, $in_footer);
+    wp_enqueue_script('galleria-fs-theme', plugins_url('galleria-fs-theme.js', __FILE__), array('galleria-fs'), $fsg_ver, $in_footer);
+    // register here and print conditionally
+    wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.11', $in_footer);
     wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $fsg_ver);
     wp_enqueue_style('galleria-fs');
+  }
+  
+  function header()
+  {
+    if ($this->options['load_in_header']) {
+      // We don't know in header if we need this or not so always include.
+      wp_print_scripts('open-layers');
+    }
   }
 
   function footer()
   {
     // We call wp_print_scripts here also when gps is false so scripts get printed before
     // json/galleria loading code
-    wp_print_scripts(($this->gps) ? 'open-layers' : '');
+    if (!$this->options['load_in_header']) {
+      wp_print_scripts(($this->gps) ? 'open-layers' : '');
+    }
     if (!empty($this->json)) {
       $this->json = rtrim($this->json, ",\n");
       $this->json .= "\n};\n";
       $this->photobox = rtrim($this->photobox, ",\n");
       $this->photobox .= "\n};\n";
-      $theme = plugins_url('galleria-fs-theme.js', __FILE__);
       $url = "fullscreen_galleria_url='".plugin_dir_url(__FILE__)."';\n";
     	$options = 'fsg_settings = '.json_encode($this->options).";\n";
       $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
-      echo "<div id=\"galleria\"></div><script>Galleria.loadTheme(\"".$theme."\");\n".
+      echo "<div id=\"galleria\"></div><script>".
            $url.$postid.$options.$this->photobox.$this->json."</script>";
     }
   }

@@ -70,7 +70,7 @@ fsg_set_keyboard = function(event) {
     },
     70: function() { // F = Fullscreen
       galleria.toggleFullscreen();
-      set_keyboard();
+      fsg_set_keyboard();
     }
   });
 }
@@ -123,8 +123,8 @@ fsg_show_galleria = function(event) {
       fsg_on_show();
     } else {
       // Init galleria
-      
       elem.galleria({
+        css: (fsg_settings['w3tc']) ? $('link').attr('href') : 'galleria-fs.css',
         dataSource: fsg_json[postid],
         show: id,
         showCounter: false,

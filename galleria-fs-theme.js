@@ -18,7 +18,6 @@ Galleria.requires(1.26, 'This version of theme requires Galleria 1.2.6 or later'
 Galleria.addTheme({
     name: 'galleria-fs',
     author: 'Petri Damstén',
-    css: 'galleria-fs.css',
     defaults: {
         transition: 'slide',
         thumbCrop:  'height',
@@ -27,7 +26,6 @@ Galleria.addTheme({
         _toggleInfo: false
     },
     init: function(options) {
-
         // add some elements
         this.addElement('info-link','info-close');
         this.append({
