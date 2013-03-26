@@ -80,6 +80,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.3 =
+* Photo sharing buttons. Needs Jetpack to work.
+
 = 1.2.4 =
 * Work with W3 Total Cache.
 

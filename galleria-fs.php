@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.2.4
+Version: 1.3
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.2.4';
+$fsg_ver = '1.3';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -147,7 +147,7 @@ class FSGPlugin {
     add_filter('attachment_fields_to_edit', array(&$this, 'fields_to_edit'), 10, 2);
     add_filter('attachment_fields_to_save', array(&$this, 'fields_to_save'), 10, 2);
     add_filter('wp_read_image_metadata', array(&$this, 'add_additional_metadata'), '', 5);
-    //add_filter('sharing_permalink', array(&$this, 'sharing_permalink'), '', 5);
+    add_filter('sharing_permalink', array(&$this, 'sharing_permalink'), '', 5);
     add_shortcode('fsg_photobox', array(&$this, 'photobox_shortcode'));
     add_shortcode('fsg_link', array(&$this, 'link_shortcode'));
     add_action('admin_init', array(&$this, 'admin_init'));
@@ -198,46 +198,55 @@ class FSGPlugin {
   	'show_title' => array(
       'title' => 'Show Title', 
       'type' => 'checkbox',
+      'note' => '',
       'default' => 'on'
     ),
   	'show_caption' => array(
       'title' => 'Show Caption', 
       'type' => 'checkbox',
+      'note' => '',
       'default' => ''
     ),
   	'show_description' => array(
       'title' => 'Show Description', 
       'type' => 'checkbox',
+      'note' => '',
       'default' => 'on'
     ),
   	'show_camera_info' => array(
       'title' => 'Show Camera Info', 
       'type' => 'checkbox',
+      'note' => '',
       'default' => 'on'
     ),
   	'show_thumbnails' => array(
       'title' => 'Show Thumbnails', 
       'type' => 'checkbox',
+      'note' => '',
       'default' => 'on'
     ),
   	'show_permalink' => array(
       'title' => 'Show Permalink', 
       'type' => 'checkbox',
+      'note' => '',
       'default' => 'on'
-    ),/*
+    ),
   	'show_sharing' => array(
-      'title' => 'Show Sharing Buttons (Jetpack needed)', 
+      'title' => 'Show Sharing Buttons', 
       'type' => 'checkbox',
+      'note' => 'Needs Jetpack to work. Use "Icon + Text" or "Icon Only" for button style.',
       'default' => ''
-    ),*/
+    ),
   	'auto_start_slideshow' => array(
       'title' => 'Autostart slideshow', 
       'type' => 'checkbox',
+      'note' => '',
       'default' => ''
     ),
   	'true_fullscreen' => array(
-      'title' => 'True fullscreen (experimental)', 
+      'title' => 'True fullscreen', 
       'type' => 'checkbox',
+      'note' => 'Experimental',
       'default' => ''
     )
   );
@@ -317,6 +326,7 @@ class FSGPlugin {
       $checked = '';
     }
   	echo '<input '.$checked.' id="'.$key.'" name="'.$fsg_db_key.'['.$key.']" type="checkbox" />';
+    echo '&nbsp;&nbsp;&nbsp;<i>'.$this->settings[$key]['note'].'</i>';
   }
 
   function settings_link($links) 
@@ -707,26 +717,35 @@ class FSGPlugin {
           } else {
             $bookmark = '';
           }
-          $share = ''; // TODO
-          /*
+          $share = '';
           # Sharing_Service is a JetPack class and it must be installed for sharing to work.
           if (class_exists('Sharing_Service') && $this->options['show_sharing']) {
-            $share = '<div><ul>';
             $sharer = new Sharing_Service();
       		  $enabled = $sharer->get_blog_services();
             $this->share_img_url = $val['permalink'];
+            $i = 0;
+            $div = '<div class="galleria-layeritem sharedaddy sd-sharing-enabled '.
+                   'robots-nocontent sd-block sd-social sd-social-icon sd-sharing '.
+                   'sd-content">';
+            $share = $div.'<ul>';
     			  foreach ($enabled['visible'] as $id => $service) {
     				  $share .= '<li class="share-'.$service->get_class().'">'.
                         $service->get_display(get_post($val['post_id'])).'</li>';
+              ++$i;
+              if ($i % 2 == 0) {
+                $share .= '</ul></div>'.$div.'<ul>';
+              }
             }
             $share .= '</ul></div>';
             $this->share_img_url = '';
             //$this->ob_log($share);
           }
-          */
-          $layer = '<div class="galleria-infolayer"><div class="galleria-layeritem">'.
-                   $title.$caption.$description.$info.
-                   '</div>'.$link.$map.$bookmark.'</div>'.$share;
+          $layer = '<div class="galleria-infolayer">'.
+                   '<div class="galleria-layeritem" style="padding-right: 20px;">'.
+                   $title.$caption.$description.$info.'</div>'.
+                   $link.$map.$bookmark.
+                   '<div class="galleria-layeritem" style="padding-right: 20px;"></div>'.
+                   $share;
         }
         $this->json .= "{id: ".$val['post_id'].
                        ", image: '".$key.
