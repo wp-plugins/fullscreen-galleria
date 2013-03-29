@@ -15,8 +15,10 @@ $(document).ready(function() { // DOM ready
   if($(".galleria-photobox").length != 0) {
     randomize_photos();
   }
-
   var hash = window.location.hash;
+  if (hash.length == 0 && fullscreen_galleria_attachment) {
+    hash = "#0";
+  }
   if (hash.length > 0) {
     var postid = 'fsg_post_' + fullscreen_galleria_postid;
     var imgid = hash.substring(1);

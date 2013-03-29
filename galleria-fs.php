@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3
+Version: 1.3.1
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3';
+$fsg_ver = '1.3.1';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -236,6 +236,12 @@ class FSGPlugin {
       'type' => 'checkbox',
       'note' => 'Needs Jetpack to work. Use "Icon + Text" or "Icon Only" for button style.',
       'default' => ''
+    ),
+  	'show_attachment' => array(
+      'title' => 'Open FSG for Attachments pages', 
+      'type' => 'checkbox',
+      'note' => 'Useful for sharing links so all attachment pages show fullscreen galleria.',
+      'default' => 'on'
     ),
   	'auto_start_slideshow' => array(
       'title' => 'Autostart slideshow', 
@@ -608,6 +614,7 @@ class FSGPlugin {
 
   function footer()
   {
+    global $post;
     // We call wp_print_scripts here also when gps is false so scripts get printed before
     // json/galleria loading code
     if (!$this->options['load_in_header']) {
@@ -621,8 +628,19 @@ class FSGPlugin {
       $url = "fullscreen_galleria_url='".plugin_dir_url(__FILE__)."';\n";
     	$options = 'fsg_settings = '.json_encode($this->options).";\n";
       $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
+      $attachment = "fullscreen_galleria_attachment=false;\n";
+      if ($this->options['show_attachment'] && get_post_type($post->ID) == "attachment") {
+        $type = get_post_mime_type($post->ID);
+        switch ($type) {
+          case 'image/jpeg':
+          case 'image/png':
+          case 'image/gif':
+            $attachment = "fullscreen_galleria_attachment=true;\n";
+            break;
+        }
+      }
       echo "<div id=\"galleria\"></div><script>".
-           $url.$postid.$options.$this->photobox.$this->json."</script>";
+           $url.$postid.$options.$attachment.$this->photobox.$this->json."</script>";
     }
   }
 

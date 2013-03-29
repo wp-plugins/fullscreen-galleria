@@ -81,6 +81,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 == Changelog ==
 
 = 1.3 =
+* Open attachment pages in FSG option
+
+= 1.3 =
 * Photo sharing buttons. Needs Jetpack to work.
 
 = 1.2.4 =
