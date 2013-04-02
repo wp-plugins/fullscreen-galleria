@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.1
+Version: 1.3.2
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.1';
+$fsg_ver = '1.3.2';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -242,6 +242,12 @@ class FSGPlugin {
       'type' => 'checkbox',
       'note' => 'Useful for sharing links so all attachment pages show fullscreen galleria.',
       'default' => 'on'
+    ),
+  	'image_nav' => array(
+      'title' => 'Disable Image Navigation', 
+      'type' => 'checkbox',
+      'note' => 'Show only one image at the time.',
+      'default' => ''
     ),
   	'auto_start_slideshow' => array(
       'title' => 'Autostart slideshow', 
@@ -494,19 +500,21 @@ class FSGPlugin {
     extract(shortcode_atts(array(
       'include'    => '',
       'class'      => '',
+      'order'      => 'ASC',
+      'orderby'    => 'post__in',
     ), $attr));
 
     if (!empty($include)) {
       $photos = &get_posts(array('post_type' => 'attachment',
-          'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
+          'post_mime_type' => 'image', 'order' => $order, 'orderby' => $orderby,
           'include' => $include));
       $id = "fsg_group_".$this->groupid;
       ++$this->groupid;
       $imgid = 0;
     } else {
       $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
-          'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
-          'orderby' => 'menu_order ID'));
+          'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order,
+          'orderby' => $orderby));
       $id = "fsg_post_".$post->ID;
       if (!empty($photos)) {
         $imgid = array_shift(array_values($photos))->ID;

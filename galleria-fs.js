@@ -44,28 +44,46 @@ fsg_set_keyboard = function(event) {
       }
     },
     left: function() { 
+      if (fsg_settings['image_nav']) {
+        return;
+      }
       galleria.prev();
       galleria.exitIdleMode();
     },
     80: function() { // P = Previous
+      if (fsg_settings['image_nav']) {
+        return;
+      }
       galleria.prev();
       galleria.exitIdleMode();
     },
     right: function() {
+      if (fsg_settings['image_nav']) {
+        return;
+      }
       galleria.next();
       galleria.exitIdleMode();
     },
     space: function() {
+      if (fsg_settings['image_nav']) {
+        return;
+      }
       galleria.next();
       galleria.exitIdleMode();
     },
     78: function() {  // N = Next
+      if (fsg_settings['image_nav']) {
+        return;
+      }
       galleria.next();
       galleria.exitIdleMode();
     },
     83: function() { // S = Slideshow
-        galleria.setPlaytime(1500);
-        galleria.playToggle();
+      if (fsg_settings['image_nav']) {
+        return;
+      }
+      galleria.setPlaytime(1500);
+      galleria.playToggle();
     },
     77: function() { // M = Open map
       $('#fsg_map_btn').click();
@@ -140,6 +158,7 @@ fsg_show_galleria = function(event) {
         autoplay: fsg_settings['auto_start_slideshow'],
         transition: fsg_settings['transition'],
         trueFullscreen: fsg_settings['true_fullscreen'],
+        showImagenav: !fsg_settings['image_nav'],
         extend: function() {
           fsg_set_keyboard();
         }

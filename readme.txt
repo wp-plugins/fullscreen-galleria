@@ -62,6 +62,8 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 * **include** - specify list of images (default is all images attached to post/page)
 * **class** - class for a tag (default is none)
+* **order** - ASC or DESC (default is ASC)
+* **orderby** - See wordpress doc for all the options (default is post__in)
 
 = keyboard shortcuts =
 
@@ -80,7 +82,11 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
-= 1.3 =
+= 1.3.2 =
+* Add order and orderby parameters in fsg_link
+* Disable image navigation option
+
+= 1.3.1 =
 * Open attachment pages in FSG option
 
 = 1.3 =
