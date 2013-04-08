@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.3
+Version: 1.3.4
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.3';
+$fsg_ver = '1.3.4';
 $fsg_db_key = 'fsg_plugin_settings';
 
 function fsg_remove_settings() 
@@ -682,19 +682,22 @@ class FSGPlugin {
         $thumb = wp_get_attachment_image_src($val['post_id'], 'thumbnail');
         $thumb = $thumb[0];
         $bookmark = '';
-        $layer = '';
+        $layer_has_info = false;
         if ($this->options['overlay_time'] != 0) {
           if ($this->options['show_title'] && !empty($val['data']->post_title)) {
+            $layer_has_info = true;
             $title = '<h1>'.addslashes($val['data']->post_title).'</h1>';
           } else {
             $title = '';
           }
           if ($this->options['show_caption'] && !empty($val['data']->post_excerpt)) {
+            $layer_has_info = true;
             $caption = '<h1>'.addslashes($val['data']->post_excerpt).'</h1>';
           } else {
             $caption = '';
           }
           if ($this->options['show_description'] && !empty($val['data']->post_content)) {
+            $layer_has_info = true;
             $description = addslashes($val['data']->post_content);
             $description = str_replace("\n", "<br/>", $description);
             $description = str_replace("\r", "", $description);
@@ -703,12 +706,14 @@ class FSGPlugin {
             $description = '';
           }
           if ($this->options['show_camera_info'] && !empty($meta['image_meta']['info'])) {
+            $layer_has_info = true;
             $info = "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
             $info = addslashes($info);
           } else {
             $info = '';
           }
           if (!empty($meta['image_meta']['link'])) {
+            $layer_has_info = true;
             $link = $meta['image_meta']['link'];
             if (strpos($link, 'flickr.com') != FALSE) {
               $t = 'Show in Flickr';
@@ -725,6 +730,7 @@ class FSGPlugin {
             $link = '';
           }
           if (!empty($meta['image_meta']['longitude'])) {
+            $layer_has_info = true;
             $c = $meta['image_meta']['latitude'].",".$meta['image_meta']['longitude'];
             $map = "<div class=\"galleria-layeritem\">".
                         "<a id=\"fsg_map_btn\" title=\"Open Map\"".
@@ -736,6 +742,7 @@ class FSGPlugin {
             $map = '';
           }
           if ($this->options['show_permalink'] && !empty($val['permalink'])) {
+            $layer_has_info = true;
             $bookmark = "<div class=\"galleria-layeritem\">".
                         "<a title=\"Permalink\" href=\"".$val['permalink']."\">".
                         "<div class=\"galleria-link-bookmark\"></div></a>".
@@ -746,6 +753,7 @@ class FSGPlugin {
           $share = '';
           # Sharing_Service is a JetPack class and it must be installed for sharing to work.
           if (class_exists('Sharing_Service') && $this->options['show_sharing']) {
+            $layer_has_info = true;
             $sharer = new Sharing_Service();
       		  $enabled = $sharer->get_blog_services();
             $this->share_img_url = $val['permalink'];
@@ -766,18 +774,19 @@ class FSGPlugin {
             $this->share_img_url = '';
             //$this->ob_log($share);
           }
-          $layer = '<div class="galleria-infolayer">'.
-                   '<div class="galleria-layeritem" style="padding-right: 20px;">'.
-                   $title.$caption.$description.$info.'</div>'.
-                   $link.$map.$bookmark.
-                   '<div class="galleria-layeritem" style="padding-right: 20px;"></div>'.
-                   $share;
         }
         $this->json .= "{id: ".$val['post_id'].
                        ", image: '".$key.
                        "', thumb: '".$thumb.
-                       "', permalink: '".$bookmark.
-                       "', layer: '".$layer."'";
+                       "', permalink: '".$bookmark."'";
+        if ($layer_has_info) {
+          $this->json .= ', layer: \'<div class="galleria-infolayer">'.
+                     '<div class="galleria-layeritem" style="padding-right: 20px;">'.
+                     $title.$caption.$description.$info.'</div>'.
+                     $link.$map.$bookmark.
+                     '<div class="galleria-layeritem" style="padding-right: 20px;"></div>'.
+                     $share."'";
+        }
         if ($extra) {
           foreach (array("thumbnail", "medium", "large", "full") as $size) {
             $img = wp_get_attachment_image_src($val['post_id'], $size);

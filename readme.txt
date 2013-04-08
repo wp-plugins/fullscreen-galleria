@@ -82,6 +82,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.3.4 =
+* Don't show info box if empty.
+
 = 1.3.3 =
 * Update openlayers to 2.12
 
