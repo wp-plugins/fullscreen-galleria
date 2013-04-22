@@ -82,6 +82,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.3.5 =
+* Try to find lens from exif.
+
 = 1.3.4 =
 * Don't show info box if empty.
 

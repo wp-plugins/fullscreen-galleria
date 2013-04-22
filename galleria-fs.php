@@ -4,15 +4,19 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.4
+Version: 1.3.5
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.4';
+$fsg_ver = '1.3.5';
 $fsg_db_key = 'fsg_plugin_settings';
+
+if (file_exists(dirname(__FILE__).'/mylenses.php')) {
+  include 'mylenses.php';
+}
 
 function fsg_remove_settings() 
 {
@@ -367,12 +371,15 @@ class FSGPlugin {
   
   function camera_info($exif)
   {
+    global $fsg_my_lenses;
     $camera = '';
+    $make = '';
     $lens = '';
     $focal = '';
     $f = '';
     $s = '';
     $iso = '';
+    #var_dump($exif);
     if (!empty($exif['Model'])) {
       $camera = $exif['Model'];
     }
@@ -384,14 +391,25 @@ class FSGPlugin {
     } else {
       $camera = $make.' '.$camera;
     }
-    #if (!empty($exif['LensModel'])) {
-    #  $lens = $exif['LensModel'];
-    #} else if (!empty($exif['LensInfo'])) {
-    #  $lens = $exif['LensInfo'];
-    #}
-    #if ($lens != '') {
-    #    $lens = ' with '.$lens;
-    #}
+    if (!empty($exif['LensModel'])) {
+      $lens = $exif['LensModel'];
+    } else if (!empty($exif['LensInfo'])) {
+      $lens = $exif['LensInfo'];
+    } else if (!empty($exif['UndefinedTag:0xA434'])) {
+      $lens = $exif['UndefinedTag:0xA434'];
+    }
+    if ($lens != '') {
+      if (isset($fsg_my_lenses)) {
+        $tmp = str_replace(' ', '', $lens);
+        $tmp = str_replace('.0', '', $tmp);
+        $tmp = str_replace('/', '', $tmp);
+        $tmp = strtolower($tmp);
+        if (array_key_exists($tmp, $fsg_my_lenses)) {
+          $lens = $fsg_my_lenses[$tmp];
+        }
+      }
+      $lens = ' with '.$lens;
+    }
     if (!empty($exif['FNumber'])) {
       $f = $this->exifv($exif['FNumber']);
       $f = $f[0] / $f[1];
