@@ -45,6 +45,7 @@
 }
 .galleria-photobox img {
   position: relative;
+  max-width: none !important;
 }
 .galleria-photobox div {
   position: relative;
@@ -170,7 +171,8 @@
 }
 .galleria-layeritem {
   display: table-cell;
-  padding-left: 4px;
+  vertical-align: middle;
+  padding-right: 3px;
 }
 .galleria-info-close {
     width: 16px;
