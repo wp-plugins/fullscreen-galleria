@@ -82,6 +82,10 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.3.6 =
+* Fix photobox in twenty twelve theme. Patch from webprom.
+* Fine tune exif reading.
+
 = 1.3.5 =
 * Try to find lens from exif.
 

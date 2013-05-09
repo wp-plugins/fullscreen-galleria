@@ -4,18 +4,18 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.5
+Version: 1.3.6
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.5';
+$fsg_ver = '1.3.6';
 $fsg_db_key = 'fsg_plugin_settings';
 
-if (file_exists(dirname(__FILE__).'/mylenses.php')) {
-  include 'mylenses.php';
+if (file_exists(dirname(__FILE__).'/mygear.php')) {
+  include 'mygear.php';
 }
 
 function fsg_remove_settings() 
@@ -368,6 +368,19 @@ class FSGPlugin {
     $b = ($b == 0) ? 1: $b;
     return array($a, $b);
   }
+
+  function my_gear($type, $value)
+  {
+    $name = 'fsg_my_'.$type;
+    global $$name;
+    $value = preg_replace('/[\x00-\x1F]/', '', $value); # Remove non printable characters
+    if (isset($$name)) {
+      if (array_key_exists($value, $$name)) {
+        return ${$name}[$value];
+      }
+    }
+    return $value;
+  }  
   
   function camera_info($exif)
   {
@@ -381,34 +394,25 @@ class FSGPlugin {
     $iso = '';
     #var_dump($exif);
     if (!empty($exif['Model'])) {
-      $camera = $exif['Model'];
+      $camera = $this->my_gear('model', $exif['Model']);
     }
     if (!empty($exif['Make'])) {
-      $make = $exif['Make'];
+      $make = $this->my_gear('make', $exif['Make']);
     }
-    if (substr($camera, 0, 4) == substr($make, 0, 4)) {
+    if (substr($camera, 0, 4) == substr($make, 0, 4) or empty($make)) {
       $camera = $camera;
     } else {
       $camera = $make.' '.$camera;
     }
-    if (!empty($exif['LensModel'])) {
+    if (!empty($exif['UndefinedTag:0xA434'])) {
+      $lens = $exif['UndefinedTag:0xA434'];
+    } else if (!empty($exif['LensModel'])) {
       $lens = $exif['LensModel'];
     } else if (!empty($exif['LensInfo'])) {
       $lens = $exif['LensInfo'];
-    } else if (!empty($exif['UndefinedTag:0xA434'])) {
-      $lens = $exif['UndefinedTag:0xA434'];
     }
     if ($lens != '') {
-      if (isset($fsg_my_lenses)) {
-        $tmp = str_replace(' ', '', $lens);
-        $tmp = str_replace('.0', '', $tmp);
-        $tmp = str_replace('/', '', $tmp);
-        $tmp = strtolower($tmp);
-        if (array_key_exists($tmp, $fsg_my_lenses)) {
-          $lens = $fsg_my_lenses[$tmp];
-        }
-      }
-      $lens = ' with '.$lens;
+      $lens = ' with '.$this->my_gear('lenses', $lens);
     }
     if (!empty($exif['FNumber'])) {
       $f = $this->exifv($exif['FNumber']);

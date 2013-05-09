@@ -45,6 +45,7 @@
 }
 .galleria-photobox img {
   position: relative;
+  max-width: none !important;
 }
 .galleria-photobox div {
   position: relative;
