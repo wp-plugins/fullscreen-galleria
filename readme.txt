@@ -5,7 +5,7 @@ Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
 Requires at least: 3.3
-Tested up to: 3.5.1
+Tested up to: 3.6.1
 Stable tag: trunk
 License: MIT
 
@@ -55,6 +55,10 @@ Adds random photobox to the page. eg. [fsg_photobox include="244, 243,242,241,20
 * **border** - border around the pictures in pixels (default is 2)
 * **maxtiles** - biggest allowed picture in tiles (default is 20)
 * **tile** - fill available space with x px tiles. rows and cols are ignored. (no default)
+* **postid** - use photos of this post. (no default)
+* **repeat** - repeat photos in photobox. (default is true)
+* **order** - ASC or DESC (default is ASC)
+* **orderby** - See wordpress doc for all the options (default is post__in)
 
 = fsg_link keyword =
 
@@ -64,6 +68,7 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 * **class** - class for a tag (default is none)
 * **order** - ASC or DESC (default is ASC)
 * **orderby** - See wordpress doc for all the options (default is post__in)
+* **postid** - use photos of this post. (no default)
 
 = keyboard shortcuts =
 
@@ -81,6 +86,12 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+
+= 1.3.7 =
+* Add repeat option to fsg_photobox.
+* Add postid option to fsg_photobox.
+* Add order and orderby parameters in fsg_photobox.
+* Add postid option to fsg_link.
 
 = 1.3.6 =
 * Fix photobox in twenty twelve theme. Patch from webprom.

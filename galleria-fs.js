@@ -215,6 +215,7 @@ randomize_photos = function()
     var ROWS = fsg_photobox[ID]['rows'];
     var MAXTILES = fsg_photobox[ID]['maxtiles'];
     var TILE = fsg_photobox[ID]['tile'];
+    var REPEAT = fsg_photobox[ID]['repeat'];
     var x = 0;
     var y = 0;
     var BOX = 0;
@@ -304,6 +305,9 @@ randomize_photos = function()
         }
       }
       if (all) {
+        if (!REPEAT) {
+          break;
+        }
         for (i = 0; i < fsg_json[ID].length; ++i) {
           fsg_json[ID][i]['used'] = (i == photo);
         }

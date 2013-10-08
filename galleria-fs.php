@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.6
+Version: 1.3.7
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.6';
+$fsg_ver = '1.3.7';
 $fsg_db_key = 'fsg_plugin_settings';
 
 if (file_exists(dirname(__FILE__).'/mygear.php')) {
@@ -489,18 +489,28 @@ class FSGPlugin {
       'border'     => 2,
       'maxtiles'   => 20,
       'tile'       => 0,
+      'postid'     => '',
+      'repeat'     => true,
+      'order'      => 'ASC',
+      'orderby'    => 'post__in',
       'include'    => '',
     ), $attr));
 
-    if (!empty($include)) {
-      $photos = &get_posts(array('post_type' => 'attachment',
-          'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
-          'include' => $include));
+    if (!empty($postid)) {
+    		  $photos = &get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
+       		    'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
+              'orderby' => $orderby));
     } else {
-      $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
-          'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
-          'orderby' => 'menu_order ID'));
-    }
+      if (!empty($include)) {
+        $photos = &get_posts(array('post_type' => 'attachment',
+            'post_mime_type' => 'image', 'order' => $order, 'orderby' => $orderby,
+            'include' => $include));
+      } else {
+        $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+            'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
+            'orderby' => $orderby));
+      }
+    }  
     $images = array();
     foreach ($photos as $key => $val) {
       $images[$this->href(wp_get_attachment_link($val->ID, 'full'))] =
@@ -509,7 +519,8 @@ class FSGPlugin {
     }
     $id = 'fsg_photobox_'.$this->photoboxid;
     $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".
-                       $border.", maxtiles: ".$maxtiles.", tile: ".$tile."},\n";
+                       $border.", maxtiles: ".$maxtiles.", tile: ".
+                       $tile.", repeat: ".$repeat."},\n";
     $this->append_json($id, $images, true);
     ++$this->photoboxid;
     return "<div id='".$id."' class='galleria-photobox'></div>";
@@ -524,26 +535,39 @@ class FSGPlugin {
       'class'      => '',
       'order'      => 'ASC',
       'orderby'    => 'post__in',
+      'postid'     => '',
     ), $attr));
 
-    if (!empty($include)) {
-      $photos = &get_posts(array('post_type' => 'attachment',
-          'post_mime_type' => 'image', 'order' => $order, 'orderby' => $orderby,
-          'include' => $include));
-      $id = "fsg_group_".$this->groupid;
-      ++$this->groupid;
-      $imgid = 0;
-    } else {
-      $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
-          'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order,
+    if (!empty($postid)) {
+		  $photos = &get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
+   		    'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
           'orderby' => $orderby));
-      $id = "fsg_post_".$post->ID;
+      $id = "fsg_post_".$postid;
       if (!empty($photos)) {
         $imgid = array_shift(array_values($photos))->ID;
       } else {
         $imgid = 0;
       }
-    }
+    } else {
+      if (!empty($include)) {
+        $photos = &get_posts(array('post_type' => 'attachment',
+            'post_mime_type' => 'image', 'order' => $order, 'orderby' => $orderby,
+            'include' => $include));
+        $id = "fsg_group_".$this->groupid;
+        ++$this->groupid;
+        $imgid = 0;
+      } else {
+        $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+            'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order,
+            'orderby' => $orderby));
+        $id = "fsg_post_".$post->ID;
+        if (!empty($photos)) {
+          $imgid = array_shift(array_values($photos))->ID;
+        } else {
+          $imgid = 0;
+        }
+      }
+    }  
     $images = array();
     foreach ($photos as $key => $val) {
       $images[$this->href(wp_get_attachment_link($val->ID, 'full'))] =
