@@ -143,6 +143,12 @@ fsg_show_galleria = function(event) {
       fsg_on_show();
     } else {
       // Init galleria
+      if  (!fsg_settings['show_thumbnails']) { 
+        var sheet = document.createElement('style')
+        sheet.innerHTML = ".galleria-stage {bottom: 10px !important; } \
+                           .galleria-thumbnails-container {height: 0px !important;}";
+        document.body.appendChild(sheet); 
+      } 
       elem.galleria({
         css: (fsg_settings['w3tc']) ? $('link').attr('href') : 'galleria-fs.css',
         dataSource: fsg_json[postid],

@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.7
+Version: 1.3.8
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.7';
+$fsg_ver = '1.3.8';
 $fsg_db_key = 'fsg_plugin_settings';
 
 if (file_exists(dirname(__FILE__).'/mygear.php')) {
@@ -245,6 +245,12 @@ class FSGPlugin {
       'title' => 'Open FSG for Attachments pages', 
       'type' => 'checkbox',
       'note' => 'Useful for sharing links so all attachment pages show fullscreen galleria.',
+      'default' => 'on'
+    ),
+  	'show_map' => array(
+      'title' => 'Show Map Button', 
+      'type' => 'checkbox',
+      'note' => 'if GPS coordinates are present',
       'default' => 'on'
     ),
   	'image_nav' => array(
@@ -775,7 +781,7 @@ class FSGPlugin {
           } else {
             $link = '';
           }
-          if (!empty($meta['image_meta']['longitude'])) {
+          if ($this->options['show_map'] && !empty($meta['image_meta']['longitude'])) {
             $layer_has_info = true;
             $c = $meta['image_meta']['latitude'].",".$meta['image_meta']['longitude'];
             $map = "<div class=\"galleria-layeritem\">".
