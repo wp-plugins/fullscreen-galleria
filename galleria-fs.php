@@ -654,7 +654,6 @@ class FSGPlugin {
     global $fsg_ver;
     global $post;
 
-    error_log($post->post_content);
     if (!is_singular() ||
         has_shortcode($post->post_content, 'gallery') ||
         has_shortcode($post->post_content, 'fsg_photobox') ||
