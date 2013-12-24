@@ -87,6 +87,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 
 == Changelog ==
 
+= 1.3.9 =
+* Only load fsg when needed. Patch from Chris Planeta.
+
 = 1.3.8 =
 * Enable/disable map setting.
 * If thumbnails disabled scale image to full space.

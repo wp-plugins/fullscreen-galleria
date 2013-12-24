@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.8
+Version: 1.3.9
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.8';
+$fsg_ver = '1.3.9';
 $fsg_db_key = 'fsg_plugin_settings';
 
 if (file_exists(dirname(__FILE__).'/mygear.php')) {
@@ -26,7 +26,7 @@ function fsg_remove_settings()
 
 class FSGPlugin {
   protected $photobox = "fsg_photobox = {\n";
-  protected $json = "fsg_json = {\n";
+  protected $json = "";
   protected $options = array();
   protected $gps = FALSE;
   protected $photoboxid = 0;
@@ -652,16 +652,22 @@ class FSGPlugin {
   function enqueue_scripts()
   {
     global $fsg_ver;
-    $in_footer = !$this->options['load_in_header'];
+    global $post;
 
-    wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.min.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
-    //wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
-    wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, $in_footer);
-    wp_enqueue_script('galleria-fs-theme', plugins_url('galleria-fs-theme.js', __FILE__), array('galleria-fs'), $fsg_ver, $in_footer);
-    // register here and print conditionally
-    wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.12', $in_footer);
-    wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $fsg_ver);
-    wp_enqueue_style('galleria-fs');
+    if (has_shortcode($post->post_content, 'gallery') ||
+        has_shortcode($post->post_content, 'fsg_photobox') ||
+        has_shortcode($post->post_content, 'fsg_link')) {
+      $in_footer = !$this->options['load_in_header'];
+
+      wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.min.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
+      //wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
+      wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, $in_footer);
+      wp_enqueue_script('galleria-fs-theme', plugins_url('galleria-fs-theme.js', __FILE__), array('galleria-fs'), $fsg_ver, $in_footer);
+      // register here and print conditionally
+      wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.12', $in_footer);
+      wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $fsg_ver);
+      wp_enqueue_style('galleria-fs');
+    }
   }
   
   function header()
@@ -726,6 +732,9 @@ class FSGPlugin {
     // Write json data for galleria
     if (empty($images)) {
       return;
+    }
+    if (empty($this->json)) {
+      $this->json = "fsg_json = {\n";
     }
     $this->json .= $id.": [\n";
     foreach ($images as $key => $val) {
