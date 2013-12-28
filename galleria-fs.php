@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.9
+Version: 1.4.0
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.9';
+$fsg_ver = '1.4.0';
 $fsg_db_key = 'fsg_plugin_settings';
 
 if (file_exists(dirname(__FILE__).'/mygear.php')) {
@@ -25,7 +25,7 @@ function fsg_remove_settings()
 }
 
 class FSGPlugin {
-  protected $photobox = "fsg_photobox = {\n";
+  protected $photobox = "";
   protected $json = "";
   protected $options = array();
   protected $gps = FALSE;
@@ -185,6 +185,12 @@ class FSGPlugin {
 
   // Settings
   protected $settings = array(
+  	'theme' => array(
+      'title' => 'Theme', 
+      'type' => 'combobox',
+      'default' => 'b',
+    	'items' => array('Black' => 'b', 'White' => 'w')
+    ),
   	'transition' => array(
       'title' => 'Transition Type', 
       'type' => 'combobox',
@@ -269,6 +275,12 @@ class FSGPlugin {
       'title' => 'True fullscreen', 
       'type' => 'checkbox',
       'note' => 'Experimental',
+      'default' => ''
+    ),
+  	'load_on_demand' => array(
+      'title' => 'Load FSG only when needed.', 
+      'type' => 'checkbox',
+      'note' => 'Experimental. Seems to break some installations',
       'default' => ''
     )
   );
@@ -524,6 +536,9 @@ class FSGPlugin {
                 'permalink' => get_permalink($val->ID).'#0');
     }
     $id = 'fsg_photobox_'.$this->photoboxid;
+    if (empty($this->photobox)) {
+      $this->photobox = "fsg_photobox = {\n";
+    }    
     $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".
                        $border.", maxtiles: ".$maxtiles.", tile: ".
                        $tile.", repeat: ".$repeat."},\n";
@@ -654,7 +669,9 @@ class FSGPlugin {
     global $fsg_ver;
     global $post;
 
-    if (has_shortcode($post->post_content, 'gallery') ||
+    if (!$this->options['load_on_demand'] ||
+        !is_singular() ||
+        has_shortcode($post->post_content, 'gallery') ||
         has_shortcode($post->post_content, 'fsg_photobox') ||
         has_shortcode($post->post_content, 'fsg_link')) {
       $in_footer = !$this->options['load_in_header'];
@@ -665,7 +682,7 @@ class FSGPlugin {
       wp_enqueue_script('galleria-fs-theme', plugins_url('galleria-fs-theme.js', __FILE__), array('galleria-fs'), $fsg_ver, $in_footer);
       // register here and print conditionally
       wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.12', $in_footer);
-      wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $fsg_ver);
+      wp_register_style('galleria-fs', plugins_url('galleria-fs-'.$this->options['theme'].'.css', __FILE__), array(), $fsg_ver);
       wp_enqueue_style('galleria-fs');
     }
   }
@@ -683,31 +700,38 @@ class FSGPlugin {
     global $post;
     // We call wp_print_scripts here also when gps is false so scripts get printed before
     // json/galleria loading code
+    $options = '';
+    $url = '';
+
     if (!$this->options['load_in_header']) {
       wp_print_scripts(($this->gps) ? 'open-layers' : '');
     }
     if (!empty($this->json)) {
       $this->json = rtrim($this->json, ",\n");
       $this->json .= "\n};\n";
+    	$options = 'fsg_settings = '.json_encode($this->options).";\n";
+    }
+    if (!empty($this->photobox)) {
       $this->photobox = rtrim($this->photobox, ",\n");
       $this->photobox .= "\n};\n";
-      $url = "fullscreen_galleria_url='".plugin_dir_url(__FILE__)."';\n";
-    	$options = 'fsg_settings = '.json_encode($this->options).";\n";
-      $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
-      $attachment = "fullscreen_galleria_attachment=false;\n";
-      if ($this->options['show_attachment'] && get_post_type($post->ID) == "attachment") {
-        $type = get_post_mime_type($post->ID);
-        switch ($type) {
-          case 'image/jpeg':
-          case 'image/png':
-          case 'image/gif':
-            $attachment = "fullscreen_galleria_attachment=true;\n";
-            break;
-        }
-      }
-      echo "<div id=\"galleria\"></div><script>".
-           $url.$postid.$options.$attachment.$this->photobox.$this->json."</script>";
     }
+    if ($this->gps) { // Open layers needs this
+      $url = "fullscreen_galleria_url='".plugin_dir_url(__FILE__)."';\n";
+    }
+    $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
+    $attachment = "fullscreen_galleria_attachment=false;\n";
+    if ($this->options['show_attachment'] && get_post_type($post->ID) == "attachment") {
+      $type = get_post_mime_type($post->ID);
+      switch ($type) {
+        case 'image/jpeg':
+        case 'image/png':
+        case 'image/gif':
+          $attachment = "fullscreen_galleria_attachment=true;\n";
+          break;
+      }
+    }
+    echo "<div id=\"galleria\"></div><script>".
+         $url.$postid.$options.$attachment.$this->photobox.$this->json."</script>";
   }
 
   function imginfo(&$meta)
