@@ -4,8 +4,8 @@ Donate link: http://torturedmind.org/misc-media/
 Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
-Requires at least: 3.3
-Tested up to: 3.7.1
+Requires at least: 3.6
+Tested up to: 3.8
 Stable tag: trunk
 License: MIT
 
@@ -86,6 +86,15 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+= 1.4.1 =
+* Handle setting updates better.
+
+= 1.4.0 =
+* White and Black themes.
+* On demand loading is now experimental and can be enabled from settings. It seemed to break some installations.
+
+= 1.3.10 =
+* Fix previous commit for index pages.
 
 = 1.3.9 =
 * Only load fsg when needed. Patch from Chris Planeta.
