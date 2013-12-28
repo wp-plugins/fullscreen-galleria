@@ -86,6 +86,8 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+= 1.4.1 =
+* Handle setting updates better.
 
 = 1.4.0 =
 * White and Black themes.
