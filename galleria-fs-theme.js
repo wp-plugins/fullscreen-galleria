@@ -11,8 +11,6 @@
 
 /* global jQuery, Galleria */
 
-Galleria.requires(1.26, 'This version of theme requires Galleria 1.2.6 or later');
-
 (function($) {
 
 Galleria.addTheme({
@@ -26,6 +24,8 @@ Galleria.addTheme({
         _toggleInfo: false
     },
     init: function(options) {
+        Galleria.requires(1.33, 'This version of theme requires Galleria 1.3.3 or later');
+      
         // add some elements
         this.addElement('info-link','info-close');
         this.append({
@@ -50,24 +50,18 @@ Galleria.addTheme({
 
         // some stuff for non-touch browsers
         if (! touch ) {
-            this.addIdleState( this.get('image-nav-left'), { opacity:0 });
-            this.addIdleState( this.get('image-nav-right'), { opacity:0 });
+            this.addIdleState( this.get('image-nav-left'), { left:-50 });
+            this.addIdleState( this.get('image-nav-right'), { right:-50 });
             this.addIdleState( this.get('counter'), { opacity:0 });
             this.addIdleState( this.get('info-link'), { opacity:0 });
             this.addIdleState( this.get('info-text'), { opacity:0 });
             this.addIdleState( this.get('thumbnails'), { opacity:0.25 });
-        } else {
-            this.$('image-nav-left, image-nav-right').hide();
         }
-        this.addIdleState( this.get('close'), { opacity:0 });
-        var gallery = this;
-        $.each(this._layers, function() {
-          gallery.addIdleState(this, {opacity:0});
-        });
+        this.addIdleState( this.get('close'), { right:-50 });
 
         // toggle info
         if ( options._toggleInfo === true ) {
-            info.bind( click, function() {
+            info.bind( 'click:fast', function() {
                 info.toggle();
             });
         } else {
@@ -89,6 +83,7 @@ Galleria.addTheme({
 
         // bind some stuff
         this.bind('thumbnail', function(e) {
+
             if (! touch ) {
                 // fade thumbnails
                 $(e.thumbTarget).css('opacity', 0.6).parent().hover(function() {
@@ -101,18 +96,24 @@ Galleria.addTheme({
                     $(e.thumbTarget).css('opacity',1);
                 }
             } else {
-                $(e.thumbTarget).css('opacity', this.getIndex() ? 1 : 0.6);
+                $(e.thumbTarget).css('opacity', this.getIndex() ? 1 : 0.6).bind('click:fast', function() {
+                    $(this).css( 'opacity', 1 ).parent().siblings().children().css('opacity', 0.6);
+                });
             }
         });
+
+        var activate = function(e) {
+            $(e.thumbTarget).css('opacity',1).parent().siblings().children().css('opacity', 0.6);
+        };
 
         this.bind('loadstart', function(e) {
             if (!e.cached) {
                 this.$('loader').show().fadeTo(200, 0.4);
             }
-
+            window.setTimeout(function() {
+                activate(e);
+            }, touch ? 300 : 0);
             this.$('info').toggle( this.hasInfo() );
-
-            $(e.thumbTarget).css('opacity',1).parent().siblings().children().css('opacity', 0.6);
         });
 
         this.bind('loadfinish', function(e) {

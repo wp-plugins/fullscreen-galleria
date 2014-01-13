@@ -4,15 +4,22 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.4.1
+Version: 1.4.2
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.4.1';
+$fsg_ver = '1.4.2';
 $fsg_db_key = 'fsg_plugin_settings';
+
+$fsg_sites = array(
+  "flickr.com" => array('Show in Flickr', 'galleria-link-flickr'),
+  "1x.com" => array('Show in 1x.com', 'galleria-link-1x'),
+  "500px.com" => array('Show in 500px', 'galleria-link-500px'),
+  "oneeyeland.com" => array('Show in One Eyeland', 'galleria-link-oneeyeland')
+);
 
 if (file_exists(dirname(__FILE__).'/mygear.php')) {
   include 'mygear.php';
@@ -679,8 +686,8 @@ class FSGPlugin {
         has_shortcode($post->post_content, 'fsg_link')) {
       $in_footer = !$this->options['load_in_header'];
 
-      wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.min.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
-      //wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
+      wp_enqueue_script('galleria', plugins_url('galleria-1.3.3.min.js', __FILE__), array('jquery'), '1.3.3', $in_footer);
+      //wp_enqueue_script('galleria', plugins_url('galleria-1.3.3.js', __FILE__), array('jquery'), '1.3.3', $in_footer);
       wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, $in_footer);
       wp_enqueue_script('galleria-fs-theme', plugins_url('galleria-fs-theme.js', __FILE__), array('galleria-fs'), $fsg_ver, $in_footer);
       // register here and print conditionally
@@ -756,6 +763,7 @@ class FSGPlugin {
   
   function append_json($id, &$images, $extra = false)
   {
+    global $fsg_sites;
     // Write json data for galleria
     if (empty($images)) {
       return;
@@ -802,18 +810,25 @@ class FSGPlugin {
           }
           if (!empty($meta['image_meta']['link'])) {
             $layer_has_info = true;
-            $link = $meta['image_meta']['link'];
-            if (strpos($link, 'flickr.com') != FALSE) {
-              $t = 'Show in Flickr';
-              $c = 'galleria-link-flickr';
-            } else {
-              $t = $link;
+            $links = explode(';', $meta['image_meta']['link']);
+            $link = '';
+            foreach ($links as $l) { 
+              $t = $l;
               $c = 'galleria-link';
+              foreach ($fsg_sites as $url => $sitedata) {
+                //error_log($l.' '.$url);
+                if (strpos($l, $url) != FALSE) {
+                  $t = $sitedata[0];
+                  $c = $sitedata[1];
+                  break;
+                }
+              }
+              error_log($t.' '.$l.' '.$c);
+              $link .= "<div class=\"galleria-layeritem\">".
+                       "<a target=\"_blank\" title=\"".$t."\" href=\"".$l."\">".
+                       "<div class=\"".$c."\"></div></a>".
+                       "</div>";
             }
-            $link = "<div class=\"galleria-layeritem\">".
-                        "<a target=\"_blank\" title=\"".$t."\" href=\"".$link."\">".
-                        "<div class=\"".$c."\"></div></a>".
-                    "</div>";
           } else {
             $link = '';
           }

@@ -86,6 +86,10 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+= 1.4.2 =
+* Add multi custom link support.
+* galleria.io updated to 1.3.3
+
 = 1.4.1 =
 * Handle setting updates better.
 
