@@ -71,7 +71,6 @@
 .galleria-container {
     position: relative;
     overflow: hidden;
-    background: #000;
 }
 .galleria-container img {
     -moz-user-select: none;
@@ -117,7 +116,6 @@
     z-index: 1;
 }
 .galleria-loader {
-    background: #000;
     width: 20px;
     height: 20px;
     margin:-10px 0 0 -10px;
@@ -138,7 +136,6 @@
     position: absolute;
 }
 .galleria-info-text, .galleria-infolayer {
-    background-color: rgba(0, 0, 0, 0.7);
     padding: 10px;
     /* IE7 */ zoom:1;
 }
@@ -155,19 +152,16 @@
     font-weight: 600;
     text-transform: none;
     margin: 0;
-    color: #fff;
     padding-bottom: 0.2em;
 }
 .galleria-info-description {
     font: 11pt 'Open Sans', sans-serif;
     margin: 0;
-    color: #bbb;
     padding-bottom: 0.4em;
 }
 .galleria-info-camera {
     font: 8pt 'Open Sans', sans-serif;
     margin: 0;
-    color: #bbb;
 }
 .galleria-layeritem {
   display: table-cell;
@@ -429,6 +423,5 @@
 .galleria-info-close,
 .galleria-image-nav-left,
 .galleria-image-nav-right {
-    background-image: url(fs-map.png);
     background-repeat: no-repeat;
 }
