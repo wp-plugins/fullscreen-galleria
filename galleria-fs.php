@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.4.2
+Version: 1.4.3
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.4.2';
+$fsg_ver = '1.4.3';
 $fsg_db_key = 'fsg_plugin_settings';
 
 $fsg_sites = array(
@@ -686,8 +686,8 @@ class FSGPlugin {
         has_shortcode($post->post_content, 'fsg_link')) {
       $in_footer = !$this->options['load_in_header'];
 
-      wp_enqueue_script('galleria', plugins_url('galleria-1.3.3.min.js', __FILE__), array('jquery'), '1.3.3', $in_footer);
-      //wp_enqueue_script('galleria', plugins_url('galleria-1.3.3.js', __FILE__), array('jquery'), '1.3.3', $in_footer);
+      wp_enqueue_script('galleria', plugins_url('galleria-1.3.5.min.js', __FILE__), array('jquery'), '1.3.5', $in_footer);
+      //wp_enqueue_script('galleria', plugins_url('galleria-1.3.5.js', __FILE__), array('jquery'), '1.3.5', $in_footer);
       wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, $in_footer);
       wp_enqueue_script('galleria-fs-theme', plugins_url('galleria-fs-theme.js', __FILE__), array('galleria-fs'), $fsg_ver, $in_footer);
       // register here and print conditionally

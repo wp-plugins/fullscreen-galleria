@@ -46,18 +46,22 @@ Galleria.addTheme({
             click = touch ? 'touchstart' : 'click';
 
         // show loader & counter with opacity
-        this.$('loader, counter').show().css('opacity', 0.7);
+        this.$('loader, counter').show().css('opacity', 0.4);
 
         // some stuff for non-touch browsers
         if (! touch ) {
             this.addIdleState( this.get('image-nav-left'), { left:-50 });
             this.addIdleState( this.get('image-nav-right'), { right:-50 });
+            this.addIdleState( this.get('close'), { right:-50 });
             this.addIdleState( this.get('counter'), { opacity:0 });
             this.addIdleState( this.get('info-link'), { opacity:0 });
             this.addIdleState( this.get('info-text'), { opacity:0 });
             this.addIdleState( this.get('thumbnails'), { opacity:0.25 });
         }
-        this.addIdleState( this.get('close'), { right:-50 });
+        var gallery = this;
+        $.each(this._layers, function() {
+            gallery.addIdleState(this, {opacity:0});
+        });
 
         // toggle info
         if ( options._toggleInfo === true ) {
