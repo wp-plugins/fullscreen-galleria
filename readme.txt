@@ -86,6 +86,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+= 1.4.4 =
+* fix multiline captions
+
 = 1.4.3 =
 * title box hides again
 * close stays (like arrows) in touch
