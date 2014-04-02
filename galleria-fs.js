@@ -150,7 +150,7 @@ fsg_show_galleria = function(event) {
         document.body.appendChild(sheet); 
       } 
       elem.galleria({
-        css: (fsg_settings['w3tc']) ? $('link').attr('href') : 'galleria-fs.css',
+        css: (fsg_settings['w3tc']) ? $('link').attr('href') : 'galleria-fs-' + fsg_settings['theme'] + '.css',
         dataSource: fsg_json[postid],
         show: id,
         showCounter: false,
