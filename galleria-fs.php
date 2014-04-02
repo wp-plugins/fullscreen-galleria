@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.4.5
+Version: 1.4.6
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.4.5';
+$fsg_ver = '1.4.6';
 $fsg_db_key = 'fsg_plugin_settings';
 
 $fsg_sites = array(
@@ -409,6 +409,15 @@ class FSGPlugin {
     }
     return $value;
   }  
+
+  function camera_round($v, $limit)
+  {
+    if ($v > $limit) {
+      return round($v, 0);
+    } else {
+      return round($v, 1);
+    }
+  }
   
   function camera_info($exif)
   {
@@ -444,15 +453,15 @@ class FSGPlugin {
     }
     if (!empty($exif['FNumber'])) {
       $f = $this->exifv($exif['FNumber']);
-      $f = $f[0] / $f[1];
+      $f = $this->camera_round($f[0] / $f[1], 10);
       $f = ' and f/'.$f;
     }
     if (!empty($exif['ExposureTime'])) {
       $s = $this->exifv($exif['ExposureTime']);
       if ($s[0] > $s[1]) {
-        $s = $s[0] / $s[1];
+        $s = $this->camera_round($s[0] / $s[1], 10);
       } else {
-        $s = $s[1] / $s[0];
+        $s = $this->camera_round($s[1] / $s[0], 5);
         $s = '1/'.$s;
       }
       $s = ', '.$s.'sec';

@@ -86,6 +86,9 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+= 1.4.6 =
+* round numbers. Patch from: https://gist.github.com/asquelt/9624792
+
 = 1.4.5 =
 * fix icons
 
