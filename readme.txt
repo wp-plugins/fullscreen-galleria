@@ -5,7 +5,7 @@ Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
 Requires at least: 3.6
-Tested up to: 3.8.1
+Tested up to: 3.9
 Stable tag: trunk
 License: MIT
 
