@@ -5,7 +5,7 @@ Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
 Requires at least: 3.6
-Tested up to: 3.9
+Tested up to: 3.9.1
 Stable tag: trunk
 License: MIT
 
@@ -86,6 +86,11 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+= 1.4.7 =
+* Work with Jetpack 3.0 share buttons.
+* Check for NULL to remove some warnings.
+* Remove "Strict Standards: Only variables should be assigned by reference" warnings.
+
 = 1.4.6 =
 * round numbers. Patch from: https://gist.github.com/asquelt/9624792
 

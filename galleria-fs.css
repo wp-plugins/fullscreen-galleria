@@ -29,6 +29,10 @@
   z-index: 10000;
 }
 
+.galleria-layeritem .sd-content {
+  margin-top: 15px !important;
+}
+
 #galleria-map {
   position: absolute;
   width: 90%;

@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.4.6
+Version: 1.4.7
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.4.6';
+$fsg_ver = '1.4.7';
 $fsg_db_key = 'fsg_plugin_settings';
 
 $fsg_sites = array(
@@ -739,14 +739,16 @@ class FSGPlugin {
     }
     $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
     $attachment = "fullscreen_galleria_attachment=false;\n";
-    if ($this->options['show_attachment'] && get_post_type($post->ID) == "attachment") {
-      $type = get_post_mime_type($post->ID);
-      switch ($type) {
-        case 'image/jpeg':
-        case 'image/png':
-        case 'image/gif':
-          $attachment = "fullscreen_galleria_attachment=true;\n";
-          break;
+    if (isset($post)) {
+      if ($this->options['show_attachment'] && get_post_type($post->ID) == "attachment") {
+        $type = get_post_mime_type($post->ID);
+        switch ($type) {
+          case 'image/jpeg':
+          case 'image/png':
+          case 'image/gif':
+            $attachment = "fullscreen_galleria_attachment=true;\n";
+            break;
+        }
       }
     }
     echo "<div id=\"galleria\"></div><script>".
@@ -839,7 +841,7 @@ class FSGPlugin {
                   break;
                 }
               }
-              error_log($t.' '.$l.' '.$c);
+              //error_log($t.' '.$l.' '.$c);
               $link .= "<div class=\"galleria-layeritem\">".
                        "<a target=\"_blank\" title=\"".$t."\" href=\"".$l."\">".
                        "<div class=\"".$c."\"></div></a>".
@@ -877,19 +879,16 @@ class FSGPlugin {
       		  $enabled = $sharer->get_blog_services();
             $this->share_img_url = $val['permalink'];
             $i = 0;
-            $div = '<div class="galleria-layeritem sharedaddy sd-sharing-enabled '.
-                   'robots-nocontent sd-block sd-social sd-social-icon sd-sharing '.
-                   'sd-content">';
+            $div = '<div class="galleria-layeritem sharedaddy sd-sharing-enabled">';
+            $div .= '<div class="robots-nocontent sd-block sd-social sd-social-icon sd-sharing">';
+            $div .= '<div class="sd-content">';
             $share = $div.'<ul>';
     			  foreach ($enabled['visible'] as $id => $service) {
     				  $share .= '<li class="share-'.$service->get_class().'">'.
                         $service->get_display(get_post($val['post_id'])).'</li>';
               ++$i;
-              if ($i % 2 == 0) {
-                $share .= '</ul></div>'.$div.'<ul>';
-              }
             }
-            $share .= '</ul></div>';
+            $share .= '</ul></div></div></div>';
             $this->share_img_url = '';
             //$this->ob_log($share);
           }
@@ -928,12 +927,12 @@ class FSGPlugin {
       $this->firstpostid = $post->ID;
     }
     // Get children (images) of the post
-    $children = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+    $children = get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
         'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
         'orderby' => 'menu_order ID'));
     if (empty($children)) {
       if (substr(get_post_mime_type($post->ID), 0, 5) == 'image') {
-        $children = &get_posts(array('post_type' => 'attachment',
+        $children = get_posts(array('post_type' => 'attachment',
             'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
             'include' => $post->ID));
       }
