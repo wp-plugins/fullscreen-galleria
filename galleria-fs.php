@@ -4,14 +4,14 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.4.7
+Version: 1.4.9
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.4.7';
+$fsg_ver = '1.4.9';
 $fsg_db_key = 'fsg_plugin_settings';
 
 $fsg_sites = array(
@@ -534,16 +534,16 @@ class FSGPlugin {
     ), $attr));
 
     if (!empty($postid)) {
-    		  $photos = &get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
+    		  $photos = get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
        		    'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
               'orderby' => $orderby));
     } else {
       if (!empty($include)) {
-        $photos = &get_posts(array('post_type' => 'attachment',
+        $photos = get_posts(array('post_type' => 'attachment',
             'post_mime_type' => 'image', 'order' => $order, 'orderby' => $orderby,
             'include' => $include));
       } else {
-        $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+        $photos = get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
             'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
             'orderby' => $orderby));
       }
@@ -579,7 +579,7 @@ class FSGPlugin {
     ), $attr));
 
     if (!empty($postid)) {
-		  $photos = &get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
+		  $photos = get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
    		    'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
           'orderby' => $orderby));
       $id = "fsg_post_".$postid;
@@ -590,14 +590,14 @@ class FSGPlugin {
       }
     } else {
       if (!empty($include)) {
-        $photos = &get_posts(array('post_type' => 'attachment',
+        $photos = get_posts(array('post_type' => 'attachment',
             'post_mime_type' => 'image', 'order' => $order, 'orderby' => $orderby,
             'include' => $include));
         $id = "fsg_group_".$this->groupid;
         ++$this->groupid;
         $imgid = 0;
       } else {
-        $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+        $photos = get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
             'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order,
             'orderby' => $orderby));
         $id = "fsg_post_".$post->ID;
@@ -879,7 +879,8 @@ class FSGPlugin {
       		  $enabled = $sharer->get_blog_services();
             $this->share_img_url = $val['permalink'];
             $i = 0;
-            $div = '<div class="galleria-layeritem sharedaddy sd-sharing-enabled">';
+            $div = '<div style="padding-bottom: 20px;"></div>'; # Give room for the sharing buttons
+            $div .= '<div class="galleria-layeritem sharedaddy sd-sharing-enabled">';
             $div .= '<div class="robots-nocontent sd-block sd-social sd-social-icon sd-sharing">';
             $div .= '<div class="sd-content">';
             $share = $div.'<ul>';
@@ -945,6 +946,7 @@ class FSGPlugin {
     }
 
     #error_log('----------------------------------------------------------');
+    #error_log($content);
     $links = $this->links($content);
     #$this->ob_log($links);
 
@@ -965,7 +967,7 @@ class FSGPlugin {
           $id = $this->get_attachment_id_from_src($href);
           #error_log('* id: '.$id);
           if ($id != NULL) {
-            $photos = &get_posts(array('post_type' => 'attachment',
+            $photos = get_posts(array('post_type' => 'attachment',
                 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
                 'include' => $id));
             #error_log('* photos: '.count($photos));
