@@ -3,7 +3,8 @@
 IMAGES="./"
 INKSCAPE="/Applications/Inkscape.app/Contents/Resources/bin/inkscape"
 
-$INKSCAPE --export-png=$IMAGES"fs-map.png" --export-area=0:0:264:24 --export-width=264 --export-height=24 --export-background=#000000 --export-background-opacity=0.0 "galleria-fs-icons.svg"
+$INKSCAPE --export-png=$IMAGES"fs-map.png" --export-area=0:0:336:24 --export-width=336 --export-height=24 --export-background=#000000 --export-background-opacity=0.0 "galleria-fs-icons.svg"
+convert fs-map.png -negate fs-map-b.png
 
 $INKSCAPE --export-png=$IMAGES"blank.gif" --export-area=0:0:1:1 --export-width=1 --export-height=1 --export-background=#000000 --export-background-opacity=0.0 "galleria-fs-icons.svg"
 
