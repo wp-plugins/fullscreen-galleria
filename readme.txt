@@ -4,8 +4,8 @@ Donate link: http://torturedmind.org/misc-media/
 Author URI: http://torturedmind.org/
 Plugin URI: http://torturedmind.org/misc-media/
 Tags: galleria, gallery, photography, images
-Requires at least: 3.6
-Tested up to: 4.0.1
+Requires at least: 4.0
+Tested up to: 4.3
 Stable tag: trunk
 License: MIT
 
@@ -86,6 +86,12 @@ Adds link to group of images. eg. [fsg_link class="btn" include="112,113,114,115
 3. Showing map for photos that have gps coordinates
 
 == Changelog ==
+= 1.4.11 =
+* Tested with WP 4.3
+* Openlayers.js updated 2.13.1
+* fsg_photobox fixes
+* Fixes in metadata parsing
+
 = 1.4.10 =
 * Update galleria.io to 1.4.2.
 

@@ -225,17 +225,20 @@ randomize_photos = function()
     var x = 0;
     var y = 0;
     var BOX = 0;
+    var width = $(this).parent().width();
+    var height = $(this).parent().height();
+    //console.log(width, height, window.width, window.height);
 
     if (TILE > 0) {
       // calc rows and cols
       BOX = TILE + BORDER;
-      COLS = Math.floor($(this).parent().width() / BOX);
-      ROWS = Math.floor($(this).parent().height() / BOX);
-      $(this).width($(this).parent().width() + BORDER);
-      $(this).height($(this).parent().height() + BORDER);
+      COLS = Math.floor(width / BOX);
+      ROWS = Math.floor(height / BOX);
+      $(this).width(width + BORDER);
+      $(this).height(height + BORDER);
       y = Math.floor(($(this).height() - (ROWS * BOX)) / 2);
     } else {
-      $(this).width($(this).parent().width() + BORDER);
+      $(this).width(width + BORDER);
       var BOX = Math.floor($(this).width() / COLS);
       $(this).height((BOX * ROWS) + BORDER);
       y = -BORDER;
@@ -252,19 +255,17 @@ randomize_photos = function()
     for (var i = 0; i < COLS; i++) {
       array[i] = new Array(ROWS);
       for (var j = 0; j < ROWS; j++) {
-        array[i][j] = 0;
+        array[i][j] = -1;
       }
-    }
-    for (i = 0; i < fsg_json[ID].length; ++i) {
-      fsg_json[ID][i]['used'] = false;
     }
     x = 0;
     y = 0;
-    var d = 1;
+    var d = 0;
+    var tiles = {};
     while (1) {
       // next free cell
       stop = false;
-      while (array[x][y] != 0) {
+      while (array[x][y] != -1) {
         ++x;
         if (x >= COLS) {
           x = 0;
@@ -280,11 +281,11 @@ randomize_photos = function()
       }
       // find max size
       var mx = 0;
-      while ((x + mx) < COLS && array[x + mx][y] == 0) {
+      while ((x + mx) < COLS && array[x + mx][y] == -1) {
         ++mx;
       }
       var my = 0;
-      while ((y + my) < ROWS && array[x][y + my] == 0) {
+      while ((y + my) < ROWS && array[x][y + my] == -1) {
         ++my;
       }
       // mark array
@@ -295,36 +296,54 @@ randomize_photos = function()
           array[x + i][y + j] = d;
         }
       }
-      // Get next random photo
-      var all = true;
-      var photo = Math.floor(Math.random() * fsg_json[ID].length);
-      for (i = 0; i < fsg_json[ID].length; ++i) {
-        //console.log(photo, fsg_json[ID][photo]['used']);
-        if (fsg_json[ID][photo]['used'] != true) {
-          fsg_json[ID][photo]['used'] = true;
+      tiles[d] = [box, x, y];
+      ++d;
+    }
+    
+    /* print array
+    for (var i = 0; i < ROWS; i++) {
+      s = i + '. - ';
+      for (var j = 0; j < COLS; j++) {
+        s += array[j][i] + ' ';
+      }
+      console.log(s);
+    }
+    */
+
+    var p = 0;
+    while (1) {
+      // Get random tile starting from biggest
+      r = Math.floor(Math.random() * d);
+      b = r;
+      all = (tiles[b][0] == -1);
+      for (j = 0; j < d; ++j) {
+        n = (r + j) % d;
+        if (tiles[n][0] > tiles[b][0]) {
+          b = n;
           all = false;
-          break;
-        }
-        ++photo;
-        if (photo >= fsg_json[ID].length) {
-          photo = 0;
         }
       }
       if (all) {
+        break;
+      }
+      // No random photo just next one...
+      if (p + 1 >= fsg_json[ID].length) {
         if (!REPEAT) {
           break;
         }
-        for (i = 0; i < fsg_json[ID].length; ++i) {
-          fsg_json[ID][i]['used'] = (i == photo);
-        }
+        p = 0;
       }
       // Add photo div
+      var photo = p + 1;
+      var box = tiles[b][0];
+      var x = tiles[b][1];
+      var y = tiles[b][2];
       var size = Math.floor(box * BOX - 2 * BORDER);
       var img = fsg_json[ID][photo]['image'];
       var imgid = fsg_json[ID][photo]['id'];
       var w = fsg_json[ID][photo]['full'][1];
       var h = fsg_json[ID][photo]['full'][2];
-      //console.log(size, y, x, y * BOX, x * BOX);
+      //console.log(b, box, y, x);
       var $div = $('<div style="width: ' + size + 'px; height: ' + size + 'px; top: ' + y * BOX +
                   'px; left: ' + x * BOX + 'px; margin: ' + BORDER + 'px;">');
       var $a = $('<a data-postid="' + ID + '" data-imgid="' + imgid + '" href="' + img + '">');
@@ -352,7 +371,8 @@ randomize_photos = function()
       $a.append($img);
       $div.append($a);
       $(this).append($div);
-      ++d;
+      ++p;
+      tiles[b][0] = -1;
     }
   });
   //$(window).resize();
