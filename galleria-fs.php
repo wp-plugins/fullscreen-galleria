@@ -4,15 +4,22 @@
 Plugin Name: Fullscreen Galleria
 Plugin URI: http://torturedmind.org/
 Description: Fullscreen gallery for Wordpress
-Version: 1.3.9
+Version: 1.4.11
 Author: Petri Damstén
 Author URI: http://torturedmind.org/
 License: MIT
 
 ******************************************************************************/
 
-$fsg_ver = '1.3.9';
+$fsg_ver = '1.4.11';
 $fsg_db_key = 'fsg_plugin_settings';
+
+$fsg_sites = array(
+  "flickr.com" => array('Show in Flickr', 'galleria-link-flickr'),
+  "1x.com" => array('Show in 1x.com', 'galleria-link-1x'),
+  "500px.com" => array('Show in 500px', 'galleria-link-500px'),
+  "oneeyeland.com" => array('Show in One Eyeland', 'galleria-link-oneeyeland')
+);
 
 if (file_exists(dirname(__FILE__).'/mygear.php')) {
   include 'mygear.php';
@@ -25,7 +32,7 @@ function fsg_remove_settings()
 }
 
 class FSGPlugin {
-  protected $photobox = "fsg_photobox = {\n";
+  protected $photobox = "";
   protected $json = "";
   protected $options = array();
   protected $gps = FALSE;
@@ -177,6 +184,9 @@ class FSGPlugin {
       if ($setting['type'] == 'checkbox') {
         $this->options[$key] = ($this->options[$key] == 'on') ? true : false;
       }
+      if ($setting['type'] == 'combobox' && empty($this->options[$key])) {
+        $this->options[$key] = $this->defaults[$key];
+      }
     }
     $this->options['w3tc'] = defined('W3TC');
     // This is for testing but not removing it yet
@@ -185,6 +195,12 @@ class FSGPlugin {
 
   // Settings
   protected $settings = array(
+  	'theme' => array(
+      'title' => 'Theme', 
+      'type' => 'combobox',
+      'default' => 'b',
+    	'items' => array('Black' => 'b', 'White' => 'w')
+    ),
   	'transition' => array(
       'title' => 'Transition Type', 
       'type' => 'combobox',
@@ -269,6 +285,12 @@ class FSGPlugin {
       'title' => 'True fullscreen', 
       'type' => 'checkbox',
       'note' => 'Experimental',
+      'default' => ''
+    ),
+  	'load_on_demand' => array(
+      'title' => 'Load FSG only when needed.', 
+      'type' => 'checkbox',
+      'note' => 'Experimental. Seems to break some installations',
       'default' => ''
     )
   );
@@ -375,7 +397,7 @@ class FSGPlugin {
     return array($a, $b);
   }
 
-  function my_gear($type, $value)
+  function my_gear($type, $value, $default = NULL)
   {
     $name = 'fsg_my_'.$type;
     global $$name;
@@ -385,8 +407,17 @@ class FSGPlugin {
         return ${$name}[$value];
       }
     }
-    return $value;
+    return is_null($default) ? $value : $default;
   }  
+
+  function camera_round($v, $limit)
+  {
+    if ($v > $limit) {
+      return round($v, 0);
+    } else {
+      return round($v, 1);
+    }
+  }
   
   function camera_info($exif)
   {
@@ -398,12 +429,17 @@ class FSGPlugin {
     $f = '';
     $s = '';
     $iso = '';
-    #var_dump($exif);
-    if (!empty($exif['Model'])) {
-      $camera = $this->my_gear('model', $exif['Model']);
+    #$this->ob_log($exif);
+    if (!empty($exif['UndefinedTag:0xA431'])) {
+      $camera = $this->my_gear('serial', $exif['UndefinedTag:0xA431'], '');
     }
-    if (!empty($exif['Make'])) {
-      $make = $this->my_gear('make', $exif['Make']);
+    if (empty($camera)) {
+      if (!empty($exif['Model'])) {
+        $camera = $this->my_gear('model', $exif['Model']);
+      }
+      if (!empty($exif['Make'])) {
+        $make = $this->my_gear('make', $exif['Make']);
+      }
     }
     if (substr($camera, 0, 4) == substr($make, 0, 4) or empty($make)) {
       $camera = $camera;
@@ -422,15 +458,15 @@ class FSGPlugin {
     }
     if (!empty($exif['FNumber'])) {
       $f = $this->exifv($exif['FNumber']);
-      $f = $f[0] / $f[1];
+      $f = $this->camera_round($f[0] / $f[1], 10);
       $f = ' and f/'.$f;
     }
     if (!empty($exif['ExposureTime'])) {
       $s = $this->exifv($exif['ExposureTime']);
       if ($s[0] > $s[1]) {
-        $s = $s[0] / $s[1];
+        $s = $this->camera_round($s[0] / $s[1], 10);
       } else {
-        $s = $s[1] / $s[0];
+        $s = $this->camera_round($s[1] / $s[0], 5);
         $s = '1/'.$s;
       }
       $s = ', '.$s.'sec';
@@ -503,16 +539,16 @@ class FSGPlugin {
     ), $attr));
 
     if (!empty($postid)) {
-    		  $photos = &get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
+    		  $photos = get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
        		    'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
               'orderby' => $orderby));
     } else {
       if (!empty($include)) {
-        $photos = &get_posts(array('post_type' => 'attachment',
+        $photos = get_posts(array('post_type' => 'attachment',
             'post_mime_type' => 'image', 'order' => $order, 'orderby' => $orderby,
             'include' => $include));
       } else {
-        $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+        $photos = get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
             'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
             'orderby' => $orderby));
       }
@@ -524,6 +560,9 @@ class FSGPlugin {
                 'permalink' => get_permalink($val->ID).'#0');
     }
     $id = 'fsg_photobox_'.$this->photoboxid;
+    if (empty($this->photobox)) {
+      $this->photobox = "fsg_photobox = {\n";
+    }    
     $this->photobox .= $id.": {rows: ".$rows.", cols: ".$cols.", border: ".
                        $border.", maxtiles: ".$maxtiles.", tile: ".
                        $tile.", repeat: ".$repeat."},\n";
@@ -545,7 +584,7 @@ class FSGPlugin {
     ), $attr));
 
     if (!empty($postid)) {
-		  $photos = &get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
+		  $photos = get_children(array('post_parent' => $postid, 'post_status' => 'inherit',
    		    'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order, 
           'orderby' => $orderby));
       $id = "fsg_post_".$postid;
@@ -556,14 +595,14 @@ class FSGPlugin {
       }
     } else {
       if (!empty($include)) {
-        $photos = &get_posts(array('post_type' => 'attachment',
+        $photos = get_posts(array('post_type' => 'attachment',
             'post_mime_type' => 'image', 'order' => $order, 'orderby' => $orderby,
             'include' => $include));
         $id = "fsg_group_".$this->groupid;
         ++$this->groupid;
         $imgid = 0;
       } else {
-        $photos = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+        $photos = get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
             'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $order,
             'orderby' => $orderby));
         $id = "fsg_post_".$post->ID;
@@ -654,18 +693,19 @@ class FSGPlugin {
     global $fsg_ver;
     global $post;
 
-    if (has_shortcode($post->post_content, 'gallery') ||
+    if (!$this->options['load_on_demand'] ||
+        !is_singular() ||
+        has_shortcode($post->post_content, 'gallery') ||
         has_shortcode($post->post_content, 'fsg_photobox') ||
         has_shortcode($post->post_content, 'fsg_link')) {
       $in_footer = !$this->options['load_in_header'];
 
-      wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.min.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
-      //wp_enqueue_script('galleria', plugins_url('galleria-1.2.9.js', __FILE__), array('jquery'), '1.2.9', $in_footer);
+      wp_enqueue_script('galleria', plugins_url('galleria-1.4.2.min.js', __FILE__), array('jquery'), '1.4.2', $in_footer);
       wp_enqueue_script('galleria-fs', plugins_url('galleria-fs.js', __FILE__), array('galleria'), $fsg_ver, $in_footer);
       wp_enqueue_script('galleria-fs-theme', plugins_url('galleria-fs-theme.js', __FILE__), array('galleria-fs'), $fsg_ver, $in_footer);
       // register here and print conditionally
-      wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.12', $in_footer);
-      wp_register_style('galleria-fs', plugins_url('galleria-fs.css', __FILE__), array(), $fsg_ver);
+      wp_register_script('open-layers', plugins_url('OpenLayers.js', __FILE__), array('galleria-fs'), '2.13.1', $in_footer);
+      wp_register_style('galleria-fs', plugins_url('galleria-fs-'.$this->options['theme'].'.css', __FILE__), array(), $fsg_ver);
       wp_enqueue_style('galleria-fs');
     }
   }
@@ -683,18 +723,27 @@ class FSGPlugin {
     global $post;
     // We call wp_print_scripts here also when gps is false so scripts get printed before
     // json/galleria loading code
+    $options = '';
+    $url = '';
+
     if (!$this->options['load_in_header']) {
       wp_print_scripts(($this->gps) ? 'open-layers' : '');
     }
     if (!empty($this->json)) {
       $this->json = rtrim($this->json, ",\n");
       $this->json .= "\n};\n";
+    	$options = 'fsg_settings = '.json_encode($this->options).";\n";
+    }
+    if (!empty($this->photobox)) {
       $this->photobox = rtrim($this->photobox, ",\n");
       $this->photobox .= "\n};\n";
+    }
+    if ($this->gps) { // Open layers needs this
       $url = "fullscreen_galleria_url='".plugin_dir_url(__FILE__)."';\n";
-    	$options = 'fsg_settings = '.json_encode($this->options).";\n";
-      $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
-      $attachment = "fullscreen_galleria_attachment=false;\n";
+    }
+    $postid = "fullscreen_galleria_postid=".$this->firstpostid.";\n";
+    $attachment = "fullscreen_galleria_attachment=false;\n";
+    if (isset($post)) {
       if ($this->options['show_attachment'] && get_post_type($post->ID) == "attachment") {
         $type = get_post_mime_type($post->ID);
         switch ($type) {
@@ -705,9 +754,9 @@ class FSGPlugin {
             break;
         }
       }
-      echo "<div id=\"galleria\"></div><script>".
-           $url.$postid.$options.$attachment.$this->photobox.$this->json."</script>";
     }
+    echo "<div id=\"galleria\"></div><script>".
+         $url.$postid.$options.$attachment.$this->photobox.$this->json."</script>";
   }
 
   function imginfo(&$meta)
@@ -726,9 +775,19 @@ class FSGPlugin {
     }
     return $permalink;
   }
-  
+
+  function js_string($str)
+  {
+    $str = addslashes($str);
+    $str = str_replace("\r", "", $str);
+    $str = str_replace("\n", "<br/>", $str);
+    $str = str_replace("\t", " ", $str);
+    return $str;
+  }
+    
   function append_json($id, &$images, $extra = false)
   {
+    global $fsg_sites;
     // Write json data for galleria
     if (empty($images)) {
       return;
@@ -747,21 +806,19 @@ class FSGPlugin {
         if ($this->options['overlay_time'] != 0) {
           if ($this->options['show_title'] && !empty($val['data']->post_title)) {
             $layer_has_info = true;
-            $title = '<h1>'.addslashes($val['data']->post_title).'</h1>';
+            $title = '<h1>'.$this->js_string($val['data']->post_title).'</h1>';
           } else {
             $title = '';
           }
           if ($this->options['show_caption'] && !empty($val['data']->post_excerpt)) {
             $layer_has_info = true;
-            $caption = '<h1>'.addslashes($val['data']->post_excerpt).'</h1>';
+            $caption = '<h1>'.$this->js_string($val['data']->post_excerpt).'</h1>';
           } else {
             $caption = '';
           }
           if ($this->options['show_description'] && !empty($val['data']->post_content)) {
             $layer_has_info = true;
-            $description = addslashes($val['data']->post_content);
-            $description = str_replace("\n", "<br/>", $description);
-            $description = str_replace("\r", "", $description);
+            $description = $this->js_string($val['data']->post_content);
             $description = "<p class=\"galleria-info-description\">".$description."</p>";
           } else {
             $description = '';
@@ -769,24 +826,31 @@ class FSGPlugin {
           if ($this->options['show_camera_info'] && !empty($meta['image_meta']['info'])) {
             $layer_has_info = true;
             $info = "<p class=\"galleria-info-camera\">".$meta['image_meta']['info']."</p>";
-            $info = addslashes($info);
+            $info = $this->js_string($info);
           } else {
             $info = '';
           }
           if (!empty($meta['image_meta']['link'])) {
             $layer_has_info = true;
-            $link = $meta['image_meta']['link'];
-            if (strpos($link, 'flickr.com') != FALSE) {
-              $t = 'Show in Flickr';
-              $c = 'galleria-link-flickr';
-            } else {
-              $t = $link;
+            $links = explode(';', $meta['image_meta']['link']);
+            $link = '';
+            foreach ($links as $l) { 
+              $t = $l;
               $c = 'galleria-link';
+              foreach ($fsg_sites as $url => $sitedata) {
+                //error_log($l.' '.$url);
+                if (strpos($l, $url) != FALSE) {
+                  $t = $sitedata[0];
+                  $c = $sitedata[1];
+                  break;
+                }
+              }
+              //error_log($t.' '.$l.' '.$c);
+              $link .= "<div class=\"galleria-layeritem\">".
+                       "<a target=\"_blank\" title=\"".$t."\" href=\"".$l."\">".
+                       "<div class=\"".$c."\"></div></a>".
+                       "</div>";
             }
-            $link = "<div class=\"galleria-layeritem\">".
-                        "<a target=\"_blank\" title=\"".$t."\" href=\"".$link."\">".
-                        "<div class=\"".$c."\"></div></a>".
-                    "</div>";
           } else {
             $link = '';
           }
@@ -819,19 +883,17 @@ class FSGPlugin {
       		  $enabled = $sharer->get_blog_services();
             $this->share_img_url = $val['permalink'];
             $i = 0;
-            $div = '<div class="galleria-layeritem sharedaddy sd-sharing-enabled '.
-                   'robots-nocontent sd-block sd-social sd-social-icon sd-sharing '.
-                   'sd-content">';
+            $div = '<div style="padding-bottom: 20px;"></div>'; # Give room for the sharing buttons
+            $div .= '<div class="galleria-layeritem sharedaddy sd-sharing-enabled">';
+            $div .= '<div class="robots-nocontent sd-block sd-social sd-social-icon sd-sharing">';
+            $div .= '<div class="sd-content">';
             $share = $div.'<ul>';
     			  foreach ($enabled['visible'] as $id => $service) {
     				  $share .= '<li class="share-'.$service->get_class().'">'.
                         $service->get_display(get_post($val['post_id'])).'</li>';
               ++$i;
-              if ($i % 2 == 0) {
-                $share .= '</ul></div>'.$div.'<ul>';
-              }
             }
-            $share .= '</ul></div>';
+            $share .= '</ul></div></div></div>';
             $this->share_img_url = '';
             //$this->ob_log($share);
           }
@@ -870,12 +932,12 @@ class FSGPlugin {
       $this->firstpostid = $post->ID;
     }
     // Get children (images) of the post
-    $children = &get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
+    $children = get_children(array('post_parent' => $post->ID, 'post_status' => 'inherit',
         'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
         'orderby' => 'menu_order ID'));
     if (empty($children)) {
       if (substr(get_post_mime_type($post->ID), 0, 5) == 'image') {
-        $children = &get_posts(array('post_type' => 'attachment',
+        $children = get_posts(array('post_type' => 'attachment',
             'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
             'include' => $post->ID));
       }
@@ -888,6 +950,7 @@ class FSGPlugin {
     }
 
     #error_log('----------------------------------------------------------');
+    #error_log($content);
     $links = $this->links($content);
     #$this->ob_log($links);
 
@@ -908,7 +971,7 @@ class FSGPlugin {
           $id = $this->get_attachment_id_from_src($href);
           #error_log('* id: '.$id);
           if ($id != NULL) {
-            $photos = &get_posts(array('post_type' => 'attachment',
+            $photos = get_posts(array('post_type' => 'attachment',
                 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID',
                 'include' => $id));
             #error_log('* photos: '.count($photos));
